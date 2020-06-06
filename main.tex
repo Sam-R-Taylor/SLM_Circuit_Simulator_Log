@@ -4,6 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{fancyhdr}
 
+\begin{folding}
 \title{SLM Circuit Simulator Log}
 \author{Sam Taylor, Maximus Wickham , Leonardo Garofalo}
 \date{June 2020}
@@ -13,22 +14,46 @@
 \rhead{SLM Soloutions}
 \lhead{SLM Circuit Sim}
 \rfoot{Page \thepage}
-
-
+\end{folding}
 
 \begin{document}
 
-
-
-
 \maketitle
 \tableofcontents
-
 \newpage
-\section{Design Specification}
+
+\section{Engineering Design Process}
 \flushleft
 
+\subsection{Outline of technical problem to be solved:}
+\flushleft
 
+\smallbreak
+Write a software package that performs a transient simulation of a circuit, like LTspice. The main elements of such a system are described below:
+\newline
+\smallbreak
+1. Parse the netlist file using reduced SPICE format.
+\newline
+2. Set up the simulation (Transient Analysis , DC Bias Point Analysis)
+\newline
+3. Construct and solve the conductance matrix
+\newline
+4. Process voltage sources
+\newline
+5. Write the output
+\newline
+6. Add support for non-linear components (advanced)
+\newline
+\mediumbreak 
+
+Key Evaluation points:
+\newline
+1. Accuracy: compare the outputs to pen and paper solutions. 
+\newline
+2. Efficiency: find how long the simulation takes and, by estimating the power consumption of your computer.
+
+\subsection{Software Requirements Specification:}
+\flushleft
 \textbf{Outline:} A circuit Simulation that produces transient analysis for circuits containing energy storage devices , diodes and transistors . With reasonable accuracy and speed.
 
 \bigbreak
@@ -60,6 +85,8 @@
 3. The software must be capable of performing the analysis consuming the least amount of power possible
 
 \newpage
+
+\subsection{Overview of the Design}
 
 \section{High Level Design}
 
