@@ -87,25 +87,84 @@ Key Evaluation points:
 
 \newpage
 
-\subsection{High Level Design}
-\includegraphics[width=15cm]{images/AlgoDesStr2.jpg}
+\subsection{Overview of Design}
+\textbf{Data Flow / Structure}
 \includegraphics[width=15cm]{images/Comphpp.jpg}
+\newpage
 
+\subsection{Design Process and Project management}
 
-\section{High Level Design}
+We chose to use the Scrum framework to manage our collaboration during the project. With Specification being our product  Sam Taylor acting as Scrum Master
+
+\includegraphics[width=15cm]{images/ScrumFramework.jpg}
+
+\subsection{Design Process Review}
+
 
 \newpage
+
+
 
 \section{Component Models}
+\includegraphics[width=15cm]{images/Comphpp1.jpg}
+\subsection{Current Components}
+Current components , have virtual function called get\verb|_|current() that allows the any component that is a current component to be cast into a current component and have its get\verb|_|current function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
+\medbreak
 
+\includegraphics[width=15cm]{images/Current_Component.PNG}
+
+\subsubsection{Resistor}
+\includegraphics[width=15cm]{images/Resistor.PNG}
+
+
+
+\subsubsection{Capacitor}
+\includegraphics[width=15cm]{images/CapLinModel.PNG}
 \newpage
+\includegraphics[width=15cm]{images/Capacitor.PNG}
+\subsubsection{Inductor}
+\includegraphics[width=15cm]{images/INDUCTOR.PNG}
+\subsubsection{Current Source}
+\subsubsection{Voltage Controlled Current Source}
+
+\subsection{Voltage Components}
+Voltage components , have virtual function called get\verb|_|Voltage() that allows the any component that is a voltage component to be cast into a voltage component and have its get\verb|_|Voltage() function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
+\medbreak
+
+\includegraphics[width=15cm]{images/Voltage_Component.PNG}
+
+\subsubsection{Voltage Source}
+\subsubsection{Voltage Controlled Voltage Source}
+\subsubsection{AC Voltage Source}
+
+\subsection{Semiconductor Components}
+\subsubsection{Diode}
+\subsubsection{BJT}
+
 
 \section{Analysis Algorithms}
+\subsection{Parser}
+\subsection{Transient Analysis}
+\subsection{Transient Solver}
+\subsection{KCL Solver}
 
 \newpage
 
-\section{Application Features}
+\section{Application Features and Innovation}
+\subsection{QT Container and Application}
+Biggest innovations: 
+QT
+Used derivations to eliminate mathematical complexity and faster implementation: In diode and BJT. 
+
+
+
+\section{Testing and Evaluation}
+
+\section{Final Evaluation}
 
 \newpage
+
+\bibliographystyle{f}
+\bibliography{bibliography.bib}
 
 \end{document}
