@@ -135,7 +135,7 @@ FILL ME IN WITH MORE DESIGN
 In order to perform a transient simulation we evaluated the node voltages of the circuit at each successive instant in time. This is done by applying KCL at each node in the Circuit and then solve the set of simultaneous equations obtained.\bigbreak
 To solve the problem computationally we resorted to linear algebra and decided to write the set of simultaneous equations in the following form
 \begin{figure}[h]
-    \caption{system of simultaneous equations}
+    \caption{Circuit analysis equations}
     \centering
     \includegraphics[width=5cm]{images/Conductance_Matrix.PNG}
     \label{fig:ConductanceMat}
@@ -152,7 +152,7 @@ Note that linear Companion models have been preferred to numerical integration b
 \subsubsection{voltage components}
 Due to their nature (infinite conductance) voltage components had to be treated specially.Their equation is written in the matrix after all the other components have been dealt with. Effectively the row corresponding to the anode of the component is added to the row corresponding to the cathode (supernode) and then is replaced with the defining equation of the voltage component.
 \begin{figure}[h]
-    \caption{voltage component added}
+    \caption{Circuit analysis equations containing a voltage source}
     \centering
     \includegraphics[width=5cm]{images/Voltage_source_matrix.PNG}
     \label{fig:VoltCompConductanceMat}
@@ -295,13 +295,24 @@ Our choice of model was made to ensure accuracy and speed of simulation. Thus Tr
 
 
 \subsubsection{Current Source}
+A Current Source is implemented by adding constants to the vector of currents. Such constant is returned by the get\_current method.\bigbreak
+See Appendix A (Current Source) for implementation
 \subsubsection{Voltage Controlled Current Source}
 \subsection{Voltage Components}
 Voltage components , have virtual function called get\verb|_|Voltage() that allows the any component that is a voltage component to be cast into a voltage component and have its get\verb|_|Voltage() function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
 \medbreak
 
 \subsubsection{Voltage Source}
+A voltage source is characterized by the equation $V_{anode}-V_{cathode}=V_{src}$. V_{src} is returned by the get\_Voltage function.\bigbreak
+See Appendix A (Voltage Source) for implementation
+
 \subsubsection{Voltage Controlled Voltage Source}
+A Voltage Controlled Voltage Source is characterized by the equation
+$V_{anode}-V_{cathode}=gain*(V_{control\_anode}-(V_{control\_cathode})$.
+The parameter gain is returned by the get\_gain function\bigbreak
+See Appendix A (Voltage Controlled Voltage Source) for implementation
+
+
 \subsubsection{AC Voltage Source}
 The AC voltage source is a source with sinusoidal voltage output that is set by a SINE waveform in SPICE, the source has a number of parameters: Amplitude , Frequency , DC Offset and a current voltage (Phase was omitted as we only modelled SINE waves without). The component was simple to implement and required a simple Set and Get methods to access the current voltage. 
 The Set function changes the value of current\verb|_|Voltage depending on the Current Time: Current Time = T
