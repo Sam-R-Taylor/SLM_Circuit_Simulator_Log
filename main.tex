@@ -5,7 +5,7 @@
 \usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage[toc,page]{appendix}
-\usepackage{multicol}
+\usepackage{amsmath}
 
 
 \title{SLM Circuit Simulator Log}
@@ -136,7 +136,8 @@ We also used a timeline to keep general project discipline and keep goals realis
 
 
 \section{Component Models}
-The following section will go through the models and implementations for each Electrical component in our simulation.
+The following section will go through the models and implementations for each Electrical component in our simulation.\mediumbreak
+A Component is a class with
 \begin{figure}[h]
     \caption{Component Inheritance tree}
     \centering
@@ -147,41 +148,96 @@ The following section will go through the models and implementations for each El
 \subsection{Current Components}
 Current components , have virtual function called get\verb|_|current() that allows the any component that is a current component to be cast into a current component and have its get\verb|_|current function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
 \bigbreak
-See Appendix A (Current Components) for implementation
+See Appendix A (Current Components) for implementation.
 \medbreak
 
 
 \subsubsection{Resistor}
 The resistor is a simple component to implement with respect to our design hence a simple self produced model was used. The class contained a resistance and conductance variables and a get\verb|_|current method which took the node voltages and resistance of the component. \bigbreak\\$Current = \frac{VAnode - VCathode}{R}$
 \bigbreak
-See Appendix A (Resistor) for implementation
+See Appendix A (Resistor) for implementation.
 \newpage
 \subsubsection{Capacitor}
 The capacitor is an energy storage component , hence the transient analysis of such a component requires the use of a companion model to be formed. Multiple were researched that can represent both the capacitor: Backward Euler , Forward Euler and Trapezoidal Rule. It is possible to derive the next voltage of a capacitor from its differential equation:
-\bigbreak\\$I= C\frac{dv}{dt}$
-\bigbreak
-$ v(t + \Delta t)= v(t) +  $\frac{1}{C}$ $$\int_{t}^{t+\Delta t} i(u) du$$ $
-
 \bigbreak
 
-Thus we can interpet this simplified equation into a (Norton????OR THEVENIN) form companion model, that gives us: 
+$I = C\frac{dv}{dt}$
+\medbreak
+$V_{n+1} = V_n + \Delta t\frac{dV_{n+1}}{dt}$
+\medbreak
+$V_{n+1} = V_n + \frac{\Delta t}{C}i_{n+1}$
+\medbreak
+$I_{n+1} = \frac{C}{\Delta t}(V_{n+1}-V_n)$
+\bigbreak
+
+Thus we can interpret this simplified equation into a companion model, that gives us: 
 
 \bigbreak
 
-\begin{multicols}{2}
-\noindent
-  \begin{equation}
-    Conductance = \frac{C}{\Delta t}
-  \end{equation}
-  \begin{equation}\break
-    LinearCurrent = \frac{Conductance}{V_n}
-  \end{equation}
-\end{multicols}
+\begin{figure}[h]
+    \caption{Capacitor Model}
+    \centering
+    \includegraphics[width=\textwidth]{images/CapModel.jpg}
+    \label{fig:CapModel}
+\end{figure}
 
+\bigbreak
+
+\noindent\begin{minipage}{.4\linewidth}
+\begin{equation}
+  Conductance = \frac{C}{\Delta t}
+\end{equation}
+\end{minipage}%
+\begin{minipage}{.7\linewidth}
+\begin{equation}
+  LinearCurrent = Conductance*V_n
+\end{equation}
+\end{minipage}
+
+\bigbreak 
+
+Thus for our transient analysis we now have a linear model for our conductance matrix. Conductance remains constant from the start of the simulation to finish. However the value of Linear Current is updated on every time step , as the value of Vn changes from from step to step.
+
+\bigbreak 
+
+See Appendix A (Capacitor) for implementation.
 
 \newpage
 
 \subsubsection{Inductor}
+The inductor is the dual of the capacitor hence similar results apply. We end up with a similar derivation:
+\bigbreak
+
+PUT IMAGE OF DERIVATION HERE
+
+\bigbreak
+
+Thus we can interpret this simplified equation into a companion model, that gives us: 
+
+\bigbreak
+
+IMAGE OF INDUCTOR MODEL 
+
+\bigbreak
+
+
+\noindent\begin{minipage}{.4\linewidth}
+\setcounter{equation}{0}
+\begin{equation}
+  Conductance = \frac{\Delta t}{L}
+\end{equation}
+\end{minipage}%
+\begin{minipage}{.7\linewidth}
+\begin{equation}
+  LinearCurrent = i_n
+\end{equation}
+\end{minipage}
+
+\bigbreak
+
+
+See Appendix A (Inductor) for implementation.
+
 \newpage
 
 \subsubsection{Current Source}
@@ -246,11 +302,59 @@ These three terms completely describe the diode model with the KCL solver algori
     \label{fig:diode}
 \end{figure}
 
-\subsubsection{BJT}
+\newpage
 
+\subsubsection{BJT}
+In order to model BJT's within our simulator we used the the Ebers Moll model. This consists of two diodes in parallel with two current dependent current sources. The current sources each provide a current proportional to the current passing through the corresponding diode as can be seen in figure \ref{fig:EbersMoll}. The advantage of using the Ebers Moll model is that is works over the entire operating range of the BJT meaning only one model has to be used. The model's only nonlinear component is a diode which also provides an advantage in that we can use our preexisting method for finding a solution to circuits with diodes present. \\
+Within Spice a BJT is defined by several parameters with the ones we used being: 
+\begin{itemize}
+    \item $I_S$
+    \item $R_b$
+    \item $R_c$
+    \item $R_e$
+    \item $\beta_r$
+    \item $\beta_f$
+\end{itemize}
+$I_s$ is needed for the diode equations, both diodes use the same value and $R_b, R_c$ and $R_e$ are the connection resistance of each of the terminal. $\beta_f$ and $\beta_r$ are used to define the current gains, these relate to $\alpha_r$ and $\alpha_f$ with this equation. \bigbreak
+$\beta = \frac{\alpha}{1-\alpha}$\bigbreak
+\begin{figure}[h]
+    \caption{Ebers Moll Model}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/EbersMoll.png}
+    \label{fig:EbersMoll}
+\end{figure}
+When the connection resistors are added to the model and the diodes are displayed using their linear models from the iterative algorithm the circuit becomes that shown in figure \ref{fig:LinearEbersMoll}. As in the case of the diode adding connection resistors makes calculating the dependence of current on node voltages more complicated. We could simply add connection resistors directly in our circuit but this would increase the number of nodes and so the complexity of our matrix. In order to represent the BJT in the conductance matrix the current at each node will need to be calculated in terms of the voltage at each node and a constant term. In order to derive these terms we first started with a set of KCL equations at each of the inner nodes. \bigbreak
+$(V_c-V_1)*G_c = (V_1-V_0)*G_r - I_r + \alpha_r*I_f + \alpha_r*G_f*(V_0-V_2)$\bigbreak
+$(V_c-V_1)*G_c + (V_e-V_2)*G_e + (V_b-V_2)*G_b = 0$\bigbreak
+$(V_e-V_2)*G_e = (V_2-V_0)*G_f - I_f + \alpha_f*I_r + \alpha_f*G_r*(V_0-V_1)$\bigbreak
+These equations then need to be rearranged to give $V_0$, $V_1$ and $V_2$ in terms of the other variables so the current at each node can be calculated. This proved difficult to do by hand and so MatLab was used to rearrange the equations. This resulted in these equations.\bigbreak
+$D = G_b*G_c*G_e + G_b*G_c*G_f + G_c*Ge*G_f + G_b*Ge*Gr + G_b*G_f*Gr + G_c*Ge*Gr + G_c*G_f*Gr + Ge*G_f*Gr
+            - \alpha_f*Gc_*G_e*G_r - \alpha_r*G_c*G_e*G_f - \alpha_f*\alpha_r*G_b*G_f*G_r - \alpha_f*\alpha_r*G_c*G_f*G_r - \alpha_f*\alpha_r*G_e*G_f*G_r$\bigbreak
+$V_0 = G_b*G_e*I_r + G_b*G_f*I_r + G_e*G_f*I_r - G_e*G_r*I_f - A_r*G_b*G_e*I_f + G_b*G_c*G_e*V_c + G_b*G_c*Gvf*V_c + G_c*G_e*G_f*V_c + G_b*G_e*G_r*V_b + G_b*G_f*G_r*V_b + G_c*G_e*G_r*V_c + G_c*G_f*G_r*V_c + G_e*G_f*G_r*V_e - A_f*A_r*G_b*G_f*I_r - A_f*A_r*G_e*G_f*I_r + A_f*A_r*G_e*G_r*I_f - A_r*G_b*G_e*G_f*V_b - A_f*G_c*G_e*G_r*V_c - A_r*G_c*G_e*G_f*V_c + A_r*G_b*G_e*G_f*V_e - A_f*A_r*G_b*G_f*G_r*V_b - A_f*A_r*G_c*G_f*G_r*V_c - A_f*A_r*G_e*G_f*Gr*Ve_ + "
+_$
+\begin{figure}[h]
+    \caption{Ebers Moll Linear Model}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/LinearEbersMoll.png}
+    \label{fig:LinearEbersMoll}
+\end{figure}
+
+\newpage
 
 \section{Analysis Algorithms}
 \subsection{Parser}
+The role of Parser.hpp is to read an input text file (compatible with a SPICE netlist) that defines the circuit and the simulation.\medbreak
+In the input file each component has a unique designator letter \bigbreak
+
+\begin{figure}[h]
+    \caption{Components input format}
+    \centering
+    \includegraphics[width=1\textwidth]{images/components_input_format.PNG}
+    \label{fig:ComponentsInputFormat}
+\end{figure}
+Firstly Parser.hpp constructs an empty Circuit instance, it then peeks the first character of each line. If the character is a designator letter then it updates the Circuit instance by using the Circuit::add\_component function.
+
+
 \subsection{Transient Analysis}
 \subsection{KCL Solver}
 \newpage
