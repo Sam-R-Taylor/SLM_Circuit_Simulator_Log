@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage[toc,page]{appendix}
 \usepackage{amsmath}
+\usepackage{subfig}
 
 
 \title{SLM Circuit Simulator Log}
@@ -89,23 +90,6 @@ Key Evaluation points:
 3. The software must be capable of performing the analysis consuming the least amount of power possible
 
 \newpage
-
-\subsection{Overview of Design}
-\textbf{Data Flow / Structure}
-\newline
-The input net list is in the form of a txt file with two output files: output\verb|_|current and output\verb|_|voltage . The output files are in a CSV format with each line denoting a time instance. The parser creates a circuit object passes that as well as the transient time step and time period. Transient analysis then loops through the Transient solver recursively performing KCL solver. From this we agreed upon data inputs and outputs to each function.
-
-\begin{figure}[h]
-    \caption{Overview of data flow}
-    \centering
-    \includegraphics[width=\textwidth]{images/Comphpp.jpg}
-    \label{fig:AlgoOverview}
-\end{figure}
-
-FILL ME IN WITH MORE DESIGN
-
-\newpage
-
 \subsection{Design Process and Project management}
 
 We chose to use the Scrum framework to manage our collaboration during the project. We initially populated the project backlog with details from the specification and our design overview. Each morning (at varying times) we held a thirty minute scrum to inform each other what we work we would be doing that day. At the end of each day we held a second meeting to discuss what was achieved and what problems we encountered updating the backlog with completed and new tasks.
@@ -126,8 +110,54 @@ We also used a timeline to keep general project discipline and keep goals realis
 \end{figure}
 
 \newpage
-
 \subsection{Design Process Review}
+
+\newpage
+
+\section{High Level Program Design }
+\subsection{Overview of Design}
+\textbf{Data Flow / Structure}
+\newline
+The input net list is in the form of a txt file with two output files: output\verb|_|current and output\verb|_|voltage . The output files are in a CSV format with each line denoting a time instance. The parser creates a circuit object passes that as well as the transient time step and time period. Transient analysis then loops through the Transient solver recursively performing KCL solver. From this we agreed upon data inputs and outputs to each function.
+
+\begin{figure}[h]
+    \caption{Overview of data flow}
+    \centering
+    \includegraphics[width=\textwidth]{images/Comphpp.jpg}
+    \label{fig:AlgoOverview}
+\end{figure}
+
+FILL ME IN WITH MORE DESIGN
+
+\newpage
+\subsection{Circuit Class}
+\subsection{Conductance Matrix}
+In order to perform a transient simulation we evaluated the node voltages of the circuit at each successive instant in time. This is done by applying KCL at each node in the Circuit and then solve the set of simultaneous equations obtained.\bigbreak
+To solve the problem computationally we resorted to linear algebra and decided to write the set of simultaneous equations in the following form
+\begin{figure}[h]
+    \caption{system of simultaneous equations}
+    \centering
+    \includegraphics[width=5cm]{images/Conductance_Matrix.PNG}
+    \label{fig:ConductanceMat}
+\end{figure}
+
+where, starting form the left, we have the conductance Matrix, the vector containing the voltages at each node in the circuit and the vector containing the currents flowing into each node
+\subsubsection{linear components}
+For Resistor, Voltage-Controlled-Current-Source and Current source the approach was to insert the defining equation of the given component in the set of linear equations. 
+\subsubsection{non-linear components}
+For Capacitor, Inductor and Diode we first had to linearize the respective defining equation.
+This was done by replacing each component in the circuit by its respective linear companion model (see \cite{LinearCompanionModels}) and use the new linear equations to solve the matrix\bigbreak
+
+Note that linear Companion models have been preferred to numerical integration by trapezoidal rule because the former method produces more accurate results
+\subsubsection{voltage components}
+Due to their nature (infinite conductance) voltage components had to be treated specially.Their equation is written in the matrix after all the other components have been dealt with. Effectively the row corresponding to the anode of the component is added to the row corresponding to the cathode (supernode) and then is replaced with the defining equation of the voltage component.
+\begin{figure}[h]
+    \caption{voltage component added}
+    \centering
+    \includegraphics[width=5cm]{images/Voltage_source_matrix.PNG}
+    \label{fig:VoltCompConductanceMat}
+\end{figure}
+\subsection{GUI and main}
 
 
 
@@ -136,8 +166,8 @@ We also used a timeline to keep general project discipline and keep goals realis
 
 
 \section{Component Models}
-The following section will go through the models and implementations for each Electrical component in our simulation.\mediumbreak
-A Component is a class with
+The following section will go through the models and implementations for each Electrical component in our simulation.
+A Component is a class with a name, an anode, a cathode and some specialized methods and data-members
 \begin{figure}[h]
     \caption{Component Inheritance tree}
     \centering
@@ -203,12 +233,15 @@ Thus for our transient analysis we now have a linear model for our conductance m
 See Appendix A (Capacitor) for implementation.
 
 \newpage
-
 \subsubsection{Inductor}
-The inductor is the dual of the capacitor hence similar results apply. We end up with a similar derivation:
+The inductor is the dual of the capacitor hence similar results apply (Same Backward and Forward Euler models). We end up with a similar derivation:
 \bigbreak
 
-PUT IMAGE OF DERIVATION HERE
+$V = L\frac{di}{dt}$
+\medbreak
+$I_{n+1} = I_n + \Delta t\frac{dI_{n+1}}{dt}$
+\medbreak
+$I_{n+1} = I_n + \frac{\Delta t}{L}V_{n+1}$
 
 \bigbreak
 
@@ -216,18 +249,20 @@ Thus we can interpret this simplified equation into a companion model, that give
 
 \bigbreak
 
-IMAGE OF INDUCTOR MODEL 
+\begin{figure}[h]
+    \caption{Inductor Model}
+    \centering
+    \includegraphics[width=\textwidth]{images/InductorModel.jpg}
+    \label{fig:InductorModel}
+\end{figure}
 
-\bigbreak
-
-
-\noindent\begin{minipage}{.4\linewidth}
+\noindent\begin{minipage}{.5\linewidth}
 \setcounter{equation}{0}
 \begin{equation}
   Conductance = \frac{\Delta t}{L}
 \end{equation}
 \end{minipage}%
-\begin{minipage}{.7\linewidth}
+\begin{minipage}{.5\linewidth}
 \begin{equation}
   LinearCurrent = i_n
 \end{equation}
@@ -235,23 +270,48 @@ IMAGE OF INDUCTOR MODEL
 
 \bigbreak
 
+Thus for our transient analysis we now have a linear model for our conductance matrix. Conductance remains constant from the start of the simulation to finish. However the value of Linear Current is the result of the previous calculation thus In is the summation of all previous $ N * \frac{\Delta t}{L}V_{n+1}$
+
+\bigbreak
 
 See Appendix A (Inductor) for implementation.
 
 \newpage
 
+\subsubsection{Final Energy Storage component models}
+Both components have a range of companion models associated with them. 
+
+\begin{figure}[h]%
+    \centering
+    \subfloat[Capacitor Models]{{\includegraphics[width=5cm]{images/CapModels.PNG} }}%
+    \qquad
+    \subfloat[Inductor Models]{{\includegraphics[width=5cm]{images/IndModels.PNG} }}%
+    \caption{2 Energy Storage Models}%
+    \label{fig:example}%
+\end{figure}
+
+Our choice of model was made to ensure accuracy and speed of simulation. Thus Trapezoidal calculation introduces error due over and under estimation of area, whilst also being computationally intense. Thus forward or backward Euler were chosen . Our model represents these Euler methods which allowed for increased speed and accuracy. Both used Norton equivalent models as conductance was our preferred calculation parameter (instead of resistance) hence , a slight accuracy error may occur in the capacitor model as computers may have trouble dividing by a small $\Delta t$.
+
+
+
 \subsubsection{Current Source}
 \subsubsection{Voltage Controlled Current Source}
-
 \subsection{Voltage Components}
 Voltage components , have virtual function called get\verb|_|Voltage() that allows the any component that is a voltage component to be cast into a voltage component and have its get\verb|_|Voltage() function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
 \medbreak
 
-
-
 \subsubsection{Voltage Source}
 \subsubsection{Voltage Controlled Voltage Source}
 \subsubsection{AC Voltage Source}
+The AC voltage source is a source with sinusoidal voltage output that is set by a SINE waveform in SPICE, the source has a number of parameters: Amplitude , Frequency , DC Offset and a current voltage (Phase was omitted as we only modelled SINE waves without). The component was simple to implement and required a simple Set and Get methods to access the current voltage. 
+The Set function changes the value of current\verb|_|Voltage depending on the Current Time: Current Time = T
+\medbreak
+
+$ CurrentVoltage = V_{Amp}  \sin{(2\pi f T)} + Dc $
+\medbreak
+The get function then returns this value of current Time allowing it to be updated and displayed.
+\bigbreak
+See Appendix A (AC Voltage Source) for implementation.
 \newpage
 
 \subsection{Semiconductor Components}
@@ -315,7 +375,7 @@ Within Spice a BJT is defined by several parameters with the ones we used being:
     \item $\beta_r$
     \item $\beta_f$
 \end{itemize}
-$I_s$ is needed for the diode equations, both diodes use the same value and $R_b, R_c$ and $R_e$ are the connection resistance of each of the terminal. $\beta_f$ and $\beta_r$ are used to define the current gains, these relate to $\alpha_r$ and $\alpha_f$ with this equation. \bigbreak
+$I_s$ is needed for the diode equations, both diodes use the same value and $R_b, R_c$ and $R_e$ are the connection resistance of each of the terminals. $\beta_f$ and $\beta_r$ are used to define the current gains, these relate to $\alpha_r$ and $\alpha_f$ with this equation. \bigbreak
 $\beta = \frac{\alpha}{1-\alpha}$\bigbreak
 \begin{figure}[h]
     \caption{Ebers Moll Model}
@@ -323,40 +383,75 @@ $\beta = \frac{\alpha}{1-\alpha}$\bigbreak
     \includegraphics[width=0.5\textwidth]{images/EbersMoll.png}
     \label{fig:EbersMoll}
 \end{figure}
-When the connection resistors are added to the model and the diodes are displayed using their linear models from the iterative algorithm the circuit becomes that shown in figure \ref{fig:LinearEbersMoll}. As in the case of the diode adding connection resistors makes calculating the dependence of current on node voltages more complicated. We could simply add connection resistors directly in our circuit but this would increase the number of nodes and so the complexity of our matrix. In order to represent the BJT in the conductance matrix the current at each node will need to be calculated in terms of the voltage at each node and a constant term. In order to derive these terms we first started with a set of KCL equations at each of the inner nodes. \bigbreak
+When the connection resistors are added to the model and the diodes are displayed using their linear models from the iterative algorithm the circuit becomes that shown in figure \ref{fig:LinearEbersMoll}. As in the case of the diode adding connection resistors makes calculating the dependence of current on node voltages more complicated. We could simply add connection resistors directly in our circuit but this would increase the number of nodes and so the complexity of our matrix. In order to represent the BJT's in the conductance matrix the current at each node will need to be calculated in terms of the voltage at each node and a constant term. In order to derive these terms we first started with a set of KCL equations at each of the inner nodes. \bigbreak
 $(V_c-V_1)*G_c = (V_1-V_0)*G_r - I_r + \alpha_r*I_f + \alpha_r*G_f*(V_0-V_2)$\bigbreak
 $(V_c-V_1)*G_c + (V_e-V_2)*G_e + (V_b-V_2)*G_b = 0$\bigbreak
 $(V_e-V_2)*G_e = (V_2-V_0)*G_f - I_f + \alpha_f*I_r + \alpha_f*G_r*(V_0-V_1)$\bigbreak
 These equations then need to be rearranged to give $V_0$, $V_1$ and $V_2$ in terms of the other variables so the current at each node can be calculated. This proved difficult to do by hand and so MatLab was used to rearrange the equations. This resulted in these equations.\bigbreak
 $D = G_b*G_c*G_e + G_b*G_c*G_f + G_c*Ge*G_f + G_b*Ge*Gr + G_b*G_f*Gr + G_c*Ge*Gr + G_c*G_f*Gr + Ge*G_f*Gr
             - \alpha_f*Gc_*G_e*G_r - \alpha_r*G_c*G_e*G_f - \alpha_f*\alpha_r*G_b*G_f*G_r - \alpha_f*\alpha_r*G_c*G_f*G_r - \alpha_f*\alpha_r*G_e*G_f*G_r$\bigbreak
-$V_0 = G_b*G_e*I_r + G_b*G_f*I_r + G_e*G_f*I_r - G_e*G_r*I_f - A_r*G_b*G_e*I_f + G_b*G_c*G_e*V_c + G_b*G_c*Gvf*V_c + G_c*G_e*G_f*V_c + G_b*G_e*G_r*V_b + G_b*G_f*G_r*V_b + G_c*G_e*G_r*V_c + G_c*G_f*G_r*V_c + G_e*G_f*G_r*V_e - A_f*A_r*G_b*G_f*I_r - A_f*A_r*G_e*G_f*I_r + A_f*A_r*G_e*G_r*I_f - A_r*G_b*G_e*G_f*V_b - A_f*G_c*G_e*G_r*V_c - A_r*G_c*G_e*G_f*V_c + A_r*G_b*G_e*G_f*V_e - A_f*A_r*G_b*G_f*G_r*V_b - A_f*A_r*G_c*G_f*G_r*V_c - A_f*A_r*G_e*G_f*Gr*Ve_ + "
-_$
+$V_0 = (\alpha_f*G_c*G_e*I_r - G_c*G_e*I_r - G_c*G_f*I_r - G_e*G_r*I_f - G_c*G_e*I_f + \alpha_r*G_c*G_e*I_f + G_b*G_c*G_e*V_b + G_b*G_c*G_f*V_b + G_c*G_e*G_f*V_e + G_b*G_e*G_r*V_b + G_b*G_f*G_r*V_b + G_c*G_e*G_r*V_c + G_c*G_f*G_r*V_c + G_e*G_f*G_r*V_e + \alpha_f*\alpha_r*G_c*G_f*I_r + 
+\alpha_f*\alpha_r*G_e*G_r*I_f - \alpha_f*G_c*G_e*G_r*V_c - \alpha_r*G_c*G_e*G_f*V_e - \alpha_f*\alpha_r*G_b*G_f*G_r*V_b - \alpha_f*\alpha_r*G_c*G_f*G_r*V_c - \alpha_f*\alpha_r*G_e*G_f*G_r*V_e)/D$\bigbreak
+$V_2 = (G_b*G_c*I_f + G_b*G_r*I_f - G_c*G_f*I_r + G_c*G_r*I_f - \alpha_f*G_b*G_c*I_r + G_b*G_c*G_f*V_b + G_b*G_c*G_e*V_e + G_c*G_e*G_f*V_e + G_b*G_f*G_r*V_b + G_b*G_e*G_r*V_e + G_c*G_f*G_r*V_c + G_c*G_e*G_r*V_e + G_e*G_f*G_r*V_e - \alpha_f*\alpha_r*G_b*G_r*I_f + \alpha_f*\alpha_r*G_c*G_f*I_r - \alpha_f*\alpha_r*G_c*G_r*I_f - \alpha_f*G_b*G_c*G_r*V_b + \alpha_f*G_b*G_c*G_r*V_c - \alpha_f*G_c*G_e*G_r*V_e - \alpha_r*G_c*G_e*G_f*V_e - \alpha_f*\alpha_r*G_b*G_f*G_r*V_b - \alpha_f*\alpha_r*G_c*G_f*G_r*V_c - \alpha_f*\alpha_r*G_e*G_f*G_r*V_e)/D$\bigbreak
+$V_1 = (G_b*G_e*I_r + G_b*G_f*I_r + G_e*G_f*I_r - G_e*G_r*I_f - \alpha_r*G_b*G_e*I_f + G_b*G_c*G_e*V_c + G_b*G_c*G_f*V_c + G_c*G_e*G_f*V_c + G_b*G_e*G_r*V_b + G_b*G_f*G_r*V_b + G_c*G_e*G_r*V_c + G_c*G_f*G_r*V_c + G_e*G_f*G_r*V_e - \alpha_f*\alpha_r*G_b*G_f*I_r - \alpha_f*\alpha_r*G_e*G_f*I_r + \alpha_f*\alpha_r*G_e*G_r*I_f - \alpha_r*G_b*G_e*G_f*V_b - \alpha_f*G_c*G_e*G_r*V_c - \alpha_r*G_c*G_e*G_f*V_c + \alpha_r*G_b*G_e*G_f*V_e - \alpha_f*\alpha_r*G_b*G_f*G_r*V_b - \alpha_f*\alpha_r*G_c*G_f*G_r*V_c - \alpha_f*\alpha_r*G_e*G_f*G_r*V_e)/D$\bigbreak
 \begin{figure}[h]
     \caption{Ebers Moll Linear Model}
     \centering
     \includegraphics[width=0.5\textwidth]{images/LinearEbersMoll.png}
     \label{fig:LinearEbersMoll}
 \end{figure}
-
+From these equations the current at each of the nodes can be given in terms of the correct node voltages and constants. In order to implement this model with these equations four methods are used within the BJT:
+\begin{itemize}
+    \item Set OP
+    \item Get Collector Coefficient (double Node)
+    \item Get Emitter Coefficient (double Node)
+    \item Get Constant Coefficients (double Node)
+\end{itemize}
+Set OP has to be called at the beginning of each iteration within the Transient Solver algorithm and sets the operating points of the diodes. In order to do this it has to subtract the voltage across the connection resistor (calculated using the current through the nodes) to find the voltage across the diodes. The diodes are set in the same way as previously described in the diode section. The denominator D in the equations above is then also calculated so it does not have to be re-calculated each time by each of the coefficient functions. The coefficient functions each provide the dependence of current on their respective node voltages for the node given by the parameter. When the coefficients are calculated they are saved as this speeds up calculating the current later on. The equations in these methods are sped up by calculating the multiplication of constants in the diode constructor and storing them, such as $G_b*G_e*G_c$ as well as factorising the equation where possible as can be seen in figure \ref{fig:BJTCollector}.    
+\begin{figure}[h]
+    \caption{BJT Collector Coefficient Generator}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/BJTCollector.png}
+    \label{fig:BJTCollector}
+\end{figure}
+After voltages have been calculated in a circuit the BJT is also required to have a method to calculate the current passing through it. Unlike the other components the BJT GetCurrent method return a vector<double> as opposed to a double. The fist value in the vector represents the current going into the collector, the second the base, and the third the emitter. When the coefficients for each node were calculated earlier when calculating voltages they were stored in three vectors. This means that using the voltages the currents can quickly be calculated, this is shown in figure \ref{fig:BJTCurrent}. 
+\begin{figure}[h]
+    \caption{BJT Current Generator}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/BJTCurrent.png}
+    \label{fig:BJTCurrent}
+\end{figure}
+The BJT used within our simulation was the 2N2222, which has values of $I_S = 10^{-14}$, $R_b = 10$, $R_c = 0.3$, $R_e - 0.2$, $\beta_r = 3$ and $\beta_f = 200$.
 \newpage
 
-\section{Analysis Algorithms}
-\subsection{Parser}
+\section{Analysis Algorithms}\label{sec:AnalysisAlgorithms}
+\subsection{Parser}\label{ssec:parser}
 The role of Parser.hpp is to read an input text file (compatible with a SPICE netlist) that defines the circuit and the simulation.\medbreak
 In the input file each component has a unique designator letter \bigbreak
-
+Reference:\ref{ss}
 \begin{figure}[h]
     \caption{Components input format}
     \centering
     \includegraphics[width=1\textwidth]{images/components_input_format.PNG}
     \label{fig:ComponentsInputFormat}
 \end{figure}
-Firstly Parser.hpp constructs an empty Circuit instance, it then peeks the first character of each line. If the character is a designator letter then it updates the Circuit instance by using the Circuit::add\_component function.
+Firstly Parser.hpp constructs an empty Circuit instance, it then peeks the first character of each line of the input file.
+\begin{itemize}
+\item If the first character is a \textit{designator letter}, it constructs a new Component in the heap with the aid of read\_value and read\_node\_number functions, then it updates the Circuit instance by using the Circuit::add\_component function.
+\item If the first string of the line is \textit{.tran} it then proceeds to run a Transient analysis of the Circuit
+\item If the first character is a \textit{*} it ignores the line because it is a comment
+\item If the first string of the line is \textit{.end} it closes the input file
+\end{itemize}
+
 
 
 \subsection{Transient Analysis}
 \subsection{KCL Solver}
+The role of KCL\_Solver is to solve for the Circuit voltages at a given instant in time.\\
+\subsubsection{Eigen3 library}
+\subsubsection{Construct and solve the conductance matrix}
+The function Matrix\_solver receives a fully updated Circuit instance from
+Transient Analysis. It then
 \newpage
 \subsection{Transient Solver}
 When non-linear components such as BJT's and diodes are present in a circuit solving the circuit using linear algebra is no-longer possible. Due to the complexity of diode and BJT equations the method used to solve these non-linear circuits is the iterative Newton-Raphson method. The equation that describes the iterative method is:
