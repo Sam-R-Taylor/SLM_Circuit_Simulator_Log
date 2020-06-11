@@ -7,6 +7,24 @@
 \usepackage[toc,page]{appendix}
 \usepackage{amsmath}
 \usepackage{subfig}
+\usepackage{float}
+
+
+\usepackage{titlesec}
+
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+
+
+
+
+
+
 
 
 \title{SLM Circuit Simulator Log}
@@ -112,6 +130,16 @@ We also used a timeline to keep general project discipline and keep goals realis
 \newpage
 \subsection{Design Process Review}
 
+
+Reviewing our timeline and working procedures revealed to me some key points to work better on projects in future:
+\begin{figure}[h]
+    \caption{Timeline of project progression}
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/Timeline.PNG}
+    \label{fig:Timeline}
+\end{figure}
+
+
 \newpage
 
 \section{High Level Program Design }
@@ -131,34 +159,45 @@ FILL ME IN WITH MORE DESIGN
 
 \newpage
 \subsection{Circuit Class}
-\subsection{Conductance Matrix}
-In order to perform a transient simulation we evaluated the node voltages of the circuit at each successive instant in time. This is done by applying KCL at each node in the Circuit and then solve the set of simultaneous equations obtained.\bigbreak
-To solve the problem computationally we resorted to linear algebra and decided to write the set of simultaneous equations in the following form
-\begin{figure}[h]
-    \caption{Circuit analysis equations}
-    \centering
-    \includegraphics[width=5cm]{images/Conductance_Matrix.PNG}
-    \label{fig:ConductanceMat}
-\end{figure}
+The aim of the circuit class was to provide an object that is instantiated by the user input to store information of the components , nodes and other elements of simulation. The Object acted to provide a guarantee of how data was formatted and what data is stored. It holds a number of key fields:
+\medbreak
+\noindent\begin{minipage}{.5\linewidth}
+\begin{itemize}
+    \item vector of Nodes
+    \item vector of Components
+    \item vector of voltages(doubles)
+\end{itemize}
+\end{minipage}%
+\begin{minipage}{.5\linewidth}
+\begin{itemize}\break
+    \item GMIN
+    \item ABSTOL
+    \item RELTOL
+    \item max\verb|_|iterations
+\end{itemize}
+\end{minipage}
+\medbreak
+It is also used to set a number of global conditions on simulation such as GMIN for convergence in BJT and Diode simulation:
+\medbreak
+Circuit has a number of methods that allow each of these stored fields to be accessed , It also has methods to add new elements to each field when the circuit.obj is being constructed. This circuit standard was passed between each function block through simulation ending its lifetime once simulation specified in the netlist is complete.
 
-where, starting form the left, we have the conductance Matrix, the vector containing the voltages at each node in the circuit and the vector containing the currents flowing into each node
-\subsubsection{linear components}
-For Resistor, Voltage-Controlled-Current-Source and Current source the approach was to insert the defining equation of the given component in the set of linear equations. 
-\subsubsection{non-linear components}
-For Capacitor, Inductor and Diode we first had to linearize the respective defining equation.
-This was done by replacing each component in the circuit by its respective linear companion model (see \cite{LinearCompanionModels}) and use the new linear equations to solve the matrix\bigbreak
+MAX AND LEO FILL IN PLEASE
 
-Note that linear Companion models have been preferred to numerical integration by trapezoidal rule because the former method produces more accurate results
-\subsubsection{voltage components}
-Due to their nature (infinite conductance) voltage components had to be treated specially.Their equation is written in the matrix after all the other components have been dealt with. Effectively the row corresponding to the anode of the component is added to the row corresponding to the cathode (supernode) and then is replaced with the defining equation of the voltage component.
-\begin{figure}[h]
-    \caption{Circuit analysis equations containing a voltage source}
-    \centering
-    \includegraphics[width=5cm]{images/Voltage_source_matrix.PNG}
-    \label{fig:VoltCompConductanceMat}
-\end{figure}
+\bigbreak
+See Appendix A (Circuit) for implementation.
+\subsection{Node Struct}
+MAX FILL IN
+\newpage
 \subsection{GUI and main}
-
+We chose to produce a GUI and a maker tool to help simplify the build process for development projects across different platforms as we were using a range of platform for development. It automates the generation of Makefiles so that only a few lines of information are needed to create each Makefile. We chose to use QT , a free and open-source widget toolkit for creating graphical user interfaces as well as cross-platform applications. This allowed us to have a single application environment where we could easily test and deploy a distributable for our work.
+\bigbreak
+\begin{figure}[h]
+    \caption{Application example operation displaying voltage at node 2 for a full wave rectifier}
+    \centering
+    \includegraphics[width=1\textwidth]{images/AppEx.PNG}
+    \label{fig:AppEx}
+\end{figure}
+Hence this allowed us to satisfactorily test and ensure correct operation of our program. Ensuring that all was functioning as expected. Further it was designed in such a way to operate completely independently of the main program. Essentially the Qt app only provides output and reads output from the main analysis program. Aside from that it is entirely possible to perform complete analysis from the terminal.
 
 
 \newpage
@@ -298,18 +337,19 @@ Our choice of model was made to ensure accuracy and speed of simulation. Thus Tr
 A Current Source is implemented by adding constants to the vector of currents. Such constant is returned by the get\_current method.\bigbreak
 See Appendix A (Current Source) for implementation
 \subsubsection{Voltage Controlled Current Source}
+A Voltage Controlled Current Source is characterized by the equation $ Current = gain\cdot(V_{control\_anode}-(V_{control\_cathode})$
 \subsection{Voltage Components}
 Voltage components , have virtual function called get\verb|_|Voltage() that allows the any component that is a voltage component to be cast into a voltage component and have its get\verb|_|Voltage() function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
 \medbreak
 
 \subsubsection{Voltage Source}
-A voltage source is characterized by the equation $V_{anode}-V_{cathode}=V_{src}$. V_{src} is returned by the get\_Voltage function.\bigbreak
+A voltage source is characterized by the equation $V_{anode}-V_{cathode}=V_{src}$. \bigbreak
 See Appendix A (Voltage Source) for implementation
 
 \subsubsection{Voltage Controlled Voltage Source}
 A Voltage Controlled Voltage Source is characterized by the equation
-$V_{anode}-V_{cathode}=gain*(V_{control\_anode}-(V_{control\_cathode})$.
-The parameter gain is returned by the get\_gain function\bigbreak
+$V_{anode}-V_{cathode}=gain\cdot(V_{control\_anode}-(V_{control\_cathode})$.
+\bigbreak
 See Appendix A (Voltage Controlled Voltage Source) for implementation
 
 
@@ -456,14 +496,150 @@ Firstly Parser.hpp constructs an empty Circuit instance, it then peeks the first
 
 
 
-\subsection{Transient Analysis}
 \subsection{KCL Solver}
-The role of KCL\_Solver is to solve for the Circuit voltages at a given instant in time.\\
-\subsubsection{Eigen3 library}
-\subsubsection{Construct and solve the conductance matrix}
-The function Matrix\_solver receives a fully updated Circuit instance from
-Transient Analysis. It then
+The role of KCL\_Solver is to solve for the Circuit voltages at a given instant in time by constructing a conductance matrix. The matrix requires that all components have a linear relationship between current and voltage as it uses linear algebra to solve the circuit. At the start of our project a rapid prototype of the algorithm was made that functioned correctly but wasn't designed to be as efficient as possible. This was necessary as it allowed other sections of the program that needed the algorithm to be worked on without having to wait for a final version. The KCL Solver algorithm needs to be particularly fast as it may be run by the Transient Solver algorithm many times each time step meaning it is the biggest bottle neck to speed.
+\subsubsection{Rapid Prototype Model}
+This model was deigned to be quick to make and simple to add more components to. However, it has many areas where it is repeating calculation resulting in slower speeds.\\ The algorithm takes a circuit object by reference and modifies the voltages inside of the object. Firstly it iterates through each of the nodes in the vector of nodes within the circuit, each time iterating through each nodes vector of component objects. At each component the algorithm stores the coefficients describing the current coming from that component depending on the voltages at each node, as well as the constant current coming from the component. These values are added to a vector of doubles where each index represents the corresponding node. For instance a resistor with an anode of node 1 and a cathode of node 2 would add its conductance to the second index of the vector and the negative of its conductance to the third of the vector, if we are looking at the cathode. Once all the components have been iterated through this vector is inserted as a row in a matrix corresponding to that nodes index. This forms the conductance matrix which is used to calculate the voltages as described earlier.\\
+In the case of voltage sources however, this gets a little more complicated. Since the current through the voltage source can't be calculated using the voltage across it an iterative technique was used to find the current coming into the voltage source. The function that creates the vector of coefficients would be called on the opposite node of the voltage source, but this time ignoring the connection to the voltage source. This vector of doubles could then be modified by replacing all instances of the opposite node with the current node minus the voltage of the voltage source. Once complete this vector of doubles can be added to the current vector of doubles for the node and the iteration through the components continues. 
+
+\subsubsection{optimized model}
+The final version of the KCL solver has been designed to be as fast and efficient as possible
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\paragraph{nodal analysis}
+In order to perform a transient simulation we evaluated the node voltages of the circuit at each successive instant in time. This is done by applying KCL at each node in the Circuit and then solve the set of simultaneous equations obtained.\bigbreak
+To solve the problem computationally we resorted to linear algebra and decided to write the set of simultaneous equations in the following form
+\begin{figure}[h]
+    \caption{Circuit analysis equations}
+    \centering
+    \includegraphics[width=5cm]{images/Conductance_Matrix.PNG}
+    \label{fig:ConductanceMat}
+\end{figure}
+
+where, starting form the left, we have the conductance Matrix, the vector containing the voltages at each node and the vector containing the currents flowing into each node
+\subparagraph{linear components}
+For Resistor, Voltage-Controlled-Current-Source and Current source the approach was to insert the defining equation of the given component in the set of linear equations. 
+\subparagraph{non-linear components}
+For Capacitor, Inductor and Diode we first had to linearize the respective defining equation.
+This was done by replacing each component in the circuit by its respective linear companion model (see \cite{LinearCompanionModels}) and use the new linear equations to solve the matrix. By extension, also BJT is handled in this way because we chose to use Ebers-Moll model to implement it.\bigbreak
+
+Note that linear Companion models have been preferred to numerical integration by trapezoidal rule for Capacitor and Inductor because the former method is faster and produces more accurate results.
+\subparagraph{voltage components}
+Since voltage components have infinite conductance a different approach had to be undertaken. Their equation is written in the matrix after all the other components have been dealt with. The row corresponding to the anode of the component is added to the row corresponding to the cathode creating a supernode. Then row corresponding to the anode is replaced with the defining equation of the voltage component.
+\begin{figure}[h]
+    \caption{Circuit analysis equations containing a voltage source}
+    \centering
+    \includegraphics[width=5cm]{images/Voltage_source_matrix.PNG}
+    \label{fig:VoltCompConductanceMat}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\paragraph{constructing the conductance Matrix}
+The general nodal analysis algorithm implies writing a KCL equation for each node of the circuit. KCL performed at node n resulted in row n of the matrix and index n of the vector of currents being modified. A complete set of equations would look like this \bigbreak
+
+\begin{bmatrix}
+a_{00} & a_{01} & a_{02} & a_{03}\\
+a_{10} & a_{11} & a_{12} & a_{13}\\
+a_{20} & a_{21} & a_{22} & a_{23}\\
+a_{30} & a_{31} & a_{32} & a_{33}
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+v_{0} \\
+v_{1} \\
+v_{2} \\
+v_{3}
+\end{bmatrix}
+=
+\begin{bmatrix}
+i_{0} \\
+i_{1} \\
+i_{2} \\
+i_{3}
+\end{bmatrix}
+
+\bigbreak
+Since v\verb|_|0 is assumed to be GND, Column 0 and Row 0 are then removed from the set of linear equations. This produces a \textit{reduced set of linear}
+\bigbreak
+
+
+\begin{bmatrix}
+a_{11} & a_{12} & a_{13}\\
+a_{21} & a_{22} & a_{23}\\
+ a_{31} & a_{32} & a_{33}
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+v_{1} \\
+v_{2} \\
+v_{3}
+\end{bmatrix}
+=
+\begin{bmatrix}
+i_{1} \\
+i_{2} \\
+i_{3}
+\end{bmatrix}
+
+\bigbreak
+This operation, necessary to make the system solvable, makes indexes of the form $a_{0n}$ and $a_{n0}$ invalid. In order to avoid creating a matrix and then resizing it (very slow operation), we decided to instantiate directly a matrix of the right size and adjust the filling to obtain an equivalent result. This implied writing every element at index $a_{nn}$ to index $a_{n-1,n-1}$ and omit the operation if it resulted in an invalid index being written.
+
+\paragraph{filling the conductance Matrix}
+Each Current component within our model can be thought as a combination of Resistor and Current Source. This means that a Current component can be represented mathematically as some conductances in the conductance Matrix and currents in the vector of currents.\\
+The information of where the coefficients should be written is encoded in the \textit{anode} and \textit{cathode} of the component and what should be written is specified by the kind of component.\bigbreak
+
+Firstly, we iterate through the Circuit::vector$<$Component*$>$ to know how the equations need to be set up. We have made the design choice of using \textit{pointers} as opposed to object instances for the following reasons
+\begin{itemize}
+  \item They allow maximum exploitation of the hierarchical design. Component* can be downcasted to derived Components (e.g. Resistor*,Inductor*...) thus allowing us to use derived classes' methods.
+  \item They allow Components to be instantiated in the Heap, thus enabling us to have a single instance of a given Component that each macro-block in our design can refer to. For instance components are constructed by Parser (see \ref{ssec:parser}) and then processed by KCL solver
+  \item They avoid copy-constructing objects producing therefore a significant speed increase of our program
+\end{itemize}
+
+Note that the following section describes how to insert coefficients in the non reduced matrix. Our code then maps each coefficient to the right position in the reduced matrix\bigbreak
+The convention followed is that the current going out of each node must sum up to 0.\\
+If the component is a Resistor then we know that its characteristic equation is $Current = \frac{V_{Anode} - V_{Cathode}}{R}$. We look at row Anode and write $\frac{1}{R}$ at $a_{Anode,Anode}$  and write $-\frac{1}{R}$ at $a_{Anode,Cathode}$ . Symmetrically we then look at row Cathode and write $\frac{1}{R}$ at $a_{Cathode,Cathode}$  and write $-\frac{1}{R}$ at $a_{Cathode,Anode}$.\\
+If the component is a Current Source then we look a index anode in the current vector and write +Current. We then look at index cathode in the current vector and write -Current.\\
+This approach is extended for Current Components. For Diodes and BJTs specific implementation see relative sections //ADD LINK
+
+\subparagraph{Voltage Components}
+When encountered, Voltage Components are stored in a vector to be processed after Current Components and BJTs are handled.\bigbreak
+If the component is a Voltage Source or an AC Voltage Source then we know its characteristic equation is $V_{anode}-V_{cathode}=V_{src}$. We create a supernode equation by adding row anode to row cahtode and index anode to index cathode in the vector of currents. We then look at row anode and write 1 at $a_{Anode,Anode}$ and write -1 at $a_{Anode,Cathode}$. We also write $V_{src}$ at index anode of the vector of currents.\\ For Voltage Controlled Voltage Sources the principle is extended by adding the additional terms included in the characteristic equation.\bigbreak
+\paragraph{Dense vs Sparse Matrix}
+
+
+
+
+
+
 \newpage
+
 \subsection{Transient Solver}
 When non-linear components such as BJT's and diodes are present in a circuit solving the circuit using linear algebra is no-longer possible. Due to the complexity of diode and BJT equations the method used to solve these non-linear circuits is the iterative Newton-Raphson method. The equation that describes the iterative method is:
 \bigbreak $x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$\bigbreak
@@ -501,6 +677,36 @@ The algorithm runs within a while loop, starting by looping through all the comp
 
 \newpage
 
+\subsection{DC Operating Point Analysis}
+The DC operating point analysis is required to find the starting node voltages for the transient analysis. It is very similar to the transient analysis and uses most of the same code base. The difference is that it only looks at a single point in time as well as assuming all capacitors to be open circuits, inductors to short circuits and ac sources to be at their dc bias point. In order to implement this the linear conductance and current of the capacitors are all left at their default value of 0, essentially making them open circuits. The same is used for the ac sources with their default values being their dc bias.\\Unfortunatly inductors are a little more complicated to implement as short circuits. In order to do this the same method as used in the final KCL solver for treating voltage sources was used as a short circuit can be thought of as a 0V voltage source. To allow for this a boolean parameter was added to the KCL solver function with a default values of false. When this is set to true all inductors are treated in this way, forming super nodes.\\
+With this code added to the KCL Solver the OP analysis function simply has to check if the circuit is linear or not and run the KCL solver or the transient solver algorithm respectively. 
+\newpage
+\subsection{Calculate Currents}
+\subsection{Transient Analysis}
+NOT FINISHED COME BACK WHEN COMPLETE.
+The transient Analysis function controls the overall simulation elements, it is responsible for updating the values of linear components at each time instance and writing the node voltages and component currents to output files once KCL or transient solver has run. The transient analysis inputs are: 
+\begin{itemize}
+    \item The Circuit.obj generated by parser
+    \item The number of time steps (calculated by taking Timeperiod/Length of Time step) 
+    \item The time period / end time from 0 
+\end{itemize}
+The function follows this design:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width =0.5\textwidth]{ images/TranAna.PNG}
+\label{fig:TranAna} 
+\caption{Transient Analysis algorithm flow diagram}
+\end{figure}
+The set conductance function simply loops though each component in the Circuit and sets their conductance based on the parameter of delta time see inductor and capacitor models for further detail.
+\break
+The update node voltages function goes through , first updates the value of variable voltage sources such as the AC Voltage source at the current time. It then runs the Transient solver for every non-linear component and the KCL solver for every linear component. After having performed these functions the Node Voltage To File is called which prints the current Node values at that time instance into
+
+
+
+
+
+\newpage
 \section{Application Features and Innovation}
 \subsection{QT Container and Application}
 Biggest innovations: 
@@ -510,7 +716,72 @@ Used derivations to eliminate mathematical complexity and faster implementation:
 
 
 \section{Testing and Evaluation}
+\subsection{Testing Diodes}
+\subsubsection{Test 1}
+The accuracy of circuits containing diodes is dependent on the error that we set with the RELTOL and ABSTOL parameters within our program. The values of RELTOL that we used was $10^{-3}$ as so our relative accuracy should be in the region of $0.1\%$. This accuracy is not possible at values very close to 0V and the ABSTOL parameter sets a limit on the maximum finite accuracy of the simulation. When testing our diodes we continued to aim for an average relative accuracy of $0.5\%$ as a bench mark. We found that in order to achieve this the presence of connection resistances in the diode model were necessary especially when other low resistances are present in the circuit. \\
+A simple test of the diode in series with a resistor as shown in figure \ref{fig:DiodeTest1} demonstrates the diode functioning correctly. This table shows the spice output compared to our simulator output. As can be seen our accuracy is far within the margin set. The diode also behaves as expected when connected to ground, voltage sources and current sources with similar accuracy.  
+\begin{center}
+\begin{tabular}{ ||c| c ||c ||}
+\hline
+ Spice & Simulator & Percentage Error \\ 
+ \hline
+ 2.86753 & 2.86746 & 0.0024 \\  
+ 2.13247 & 2.13254 & 0.0034 \\   
+ \hline
+\end{tabular}
+\end{center}
+The current was also tested and the relative errors are shown compared to spice in the table.
+\begin{center}
+\begin{tabular}{ ||c| c ||c ||}
+\hline
+ Spice & Simulator & Percentage Error \\ 
+ \hline
+ 21.3247 & 21.3254 & 0.0033 \\  
+ \hline
+\end{tabular}
+\end{center}
+\begin{figure}[h]
+    \caption{Diode Test 1}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/DiodeTest1.png}
+    \label{fig:DiodeTest1}
+\end{figure}
+\subsubsection{Test 2}
+We also tested our diode in full wave rectifier arrangement to demonstrate its accuracy in more complex circuits. The circuit used is the one shown in figure \ref{fig:DiodeTest2}. Testing was more complicated as we needed to compare with the spice output at different time steps. As spice doesn't use constant time steps unlike our algorithm we cannot simply compare the voltage at each time step. In order to measure the accuracy we created a python script that interpolates the data from spice to give a voltage at each time step. In order to do this we assumed each of the voltage changes in the spice output to be linear. This can then be compared to our output and taking the average error across all the time steps. As our value of ABSTOL was $10^{-12}$ any value of voltage lower than this didn't have its error compared. We found that the average error for the voltage across the resistor across all time steps was 0.043\% and the maximum error was 1.2\%. The graphical output of our rectifier can be seen in figure \ref{fig:FullWaveRec} and is as expected from a full wave rectifier. Our analysis was run over 5 seconds with 0.01 second time steps. 
+\begin{figure}[h]
+    \caption{Diode Test 2}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/DiodeTest2.png}
+    \label{fig:DiodeTest2}
+\end{figure}
+\begin{figure}[h]
+    \caption{Full Waver Rectifier Output}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/FullWaveRec.png}
+    \label{fig:FullWaveRec}
+\end{figure}
+\newpage
+\subsection{Testing BJT}
+To test the BJT working the circuit shown in figure \ref{fig:BJTTest1} was used. The table below shows the voltage from the spice simulation and our simulation as well as the relative error. The error is greater than that found in the diode bu still within an acceptable margin. 
+\begin{center}
+\begin{tabular}{ ||c| c ||c ||}
+\hline
+ Spice & Simulator & Percentage Error \\ 
+ \hline
+ 4.98968 & 4.98926 & 0.0084 \\  
+ 4.29682 & 4.29495 & 0.043 \\   
+ \hline
+\end{tabular}
+\end{center}
+\begin{figure}[h]
+    \caption{BJT Test}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/BJTTest1.png}
+    \label{fig:BJTTest1}
+\end{figure}
 
+\subsection{Testing Capacitor Model}
+When testing energy storage devices it was expected that there would be more error than found when testing other components due to the effects of integration error. We first tested a capacitor connected to an ac source as shown in figure .
 \section{Final Evaluation}
 
 \newpage
@@ -519,26 +790,5 @@ Used derivations to eliminate mathematical complexity and faster implementation:
 
 \bibliographystyle{plain}
 \bibliography{bibliography.bib}
-
-\appendix
-\section{Appendix}
-\textbf{Current Component}
-\bigbreak
-\includegraphics[width=12cm]{images/Current_Component.PNG}
-\bigbreak
-\textbf{Resistor}
-\bigbreak
-\includegraphics[width=12cm]{images/Resistor.PNG}
-\bigbreak
-\newpage
-\textbf{Capacitor}
-\bigbreak
-\includegraphics[width=12cm]{images/Capacitor.PNG}
-\bigbreak
-\newpage
-\textbf{Inductor}
-\bigbreak
-\includegraphics[width=12cm]{images/INDUCTOR.PNG}
-\bigbreak
 
 \end{document}
