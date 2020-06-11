@@ -130,16 +130,23 @@ We also used a timeline to keep general project discipline and keep goals realis
 \newpage
 \subsection{Design Process Review}
 
-
-Reviewing our timeline and working procedures revealed to me some key points to work better on projects in future:
+Our initial idea was to rapidly prototype a number of key functions for our design such as KCL , transient solver and few components so that we could get immediate results and would be able to tackle any troubling theory quickly. This proved to work well and allowed us to maintain steady project momentum at a daunting stage in development. Whilst also giving us some swift functionality to  plan the design around.  A drawback however was that later on when refining prototype functions it became an issue that, aspects of the prototype function had been relied upon or compensated for in other areas of code. Leading to some redundant / artifact code that had to be removed.
+\medbreak
+It was also confusing at time which to prioritise : Accuracy or speed/efficiency , therefore we found that some functions had conflicting goals. In reflection i would have placed a preference order on criterion of the specification to highlight which should take precedence when implementing.  
+\smallbreak
 \begin{figure}[h]
     \caption{Timeline of project progression}
     \centering
-    \includegraphics[width=0.7\linewidth]{images/Timeline.PNG}
+    \includegraphics[width=0.6\linewidth]{images/Timeline.PNG}
     \label{fig:Timeline}
 \end{figure}
-
-
+Reviewing our timeline and working procedures revealed to me some key points to work better on projects in future:
+\begin{itemize}
+    \item Set Clear Milestones and deadlines for collective action.
+    \item Find a better method for communicating changes made to each others code.
+    \item Set Clear data structures / types to be passed between functions. (Establish a universal format)
+    \item Have project discipline and maintain focus on tasks that are expected to be complete.
+\end{itemize}
 \newpage
 
 \section{High Level Program Design }
@@ -155,7 +162,7 @@ The input net list is in the form of a txt file with two output files: output\ve
     \label{fig:AlgoOverview}
 \end{figure}
 
-FILL ME IN WITH MORE DESIGN
+FILL ME IN
 
 \newpage
 \subsection{Circuit Class}
@@ -188,6 +195,8 @@ See Appendix A (Circuit) for implementation.
 \subsection{Node Struct}
 MAX FILL IN
 \newpage
+\subsection{Why Eigen3}
+Max please fill in why we chose eigen. over another matrix package.
 \subsection{GUI and main}
 We chose to produce a GUI and a maker tool to help simplify the build process for development projects across different platforms as we were using a range of platform for development. It automates the generation of Makefiles so that only a few lines of information are needed to create each Makefile. We chose to use QT , a free and open-source widget toolkit for creating graphical user interfaces as well as cross-platform applications. This allowed us to have a single application environment where we could easily test and deploy a distributable for our work.
 \bigbreak
@@ -708,6 +717,7 @@ The update node voltages function goes through , first updates the value of vari
 
 \newpage
 \section{Application Features and Innovation}
+\newpage
 \subsection{QT Container and Application}
 Biggest innovations: 
 QT
@@ -716,6 +726,25 @@ Used derivations to eliminate mathematical complexity and faster implementation:
 
 
 \section{Testing and Evaluation}
+\subsection{Linear Components}
+In order to test our KCL solver algorithm many different test cases had to be used to ensure their were no special cases that didn't work which allowed us to remove a few small bugs. In order to demonstrate the ability of the algorithm to solve complex circuits the circuit shown in figure \ref{fig:LinearTest} was used. The voltages that our algorithm computed where slightly different to the the values calculated by spice and it is not completely clear why. It could be a combination of both floating point errors as well as errors introduced by the Eigen library with the library having to provide a compromise between speed and accuracy. A few values from our circuit and spice are shown in the table along with relative accuracy's in percent. 
+\begin{center}
+\begin{tabular}{ ||c|| c |c | c | c | c | c | c | c | c | c ||}
+ \hline
+  & Node 1 & Node 2 & Node 3\\  
+  \hline
+ Spice & 8 & -27.833 & -24.833\\   
+ Simulation & 7.99 & -27.843 & -24.843\\
+ Error & 0.125 & 0.035 & 0.04\\ 
+ \hline
+\end{tabular}
+\end{center}
+\begin{figure}[h]
+    \caption{Linear Test}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/LinearTest.png}
+    \label{fig:LinearTest}
+\end{figure}
 \subsection{Testing Diodes}
 \subsubsection{Test 1}
 The accuracy of circuits containing diodes is dependent on the error that we set with the RELTOL and ABSTOL parameters within our program. The values of RELTOL that we used was $10^{-3}$ as so our relative accuracy should be in the region of $0.1\%$. This accuracy is not possible at values very close to 0V and the ABSTOL parameter sets a limit on the maximum finite accuracy of the simulation. When testing our diodes we continued to aim for an average relative accuracy of $0.5\%$ as a bench mark. We found that in order to achieve this the presence of connection resistances in the diode model were necessary especially when other low resistances are present in the circuit. \\
@@ -781,7 +810,41 @@ To test the BJT working the circuit shown in figure \ref{fig:BJTTest1} was used.
 \end{figure}
 
 \subsection{Testing Capacitor Model}
-When testing energy storage devices it was expected that there would be more error than found when testing other components due to the effects of integration error. We first tested a capacitor connected to an ac source as shown in figure .
+When testing energy storage devices it was expected that there would be more error than found when testing other components due to the effects of integration error. We tested a capacitor connected to an ac source as shown in figure \ref{fig:CapacitorTest1}. This test resulted in an average error measured against the spice interpolated data of 3\%. This seemed fairly high and was likely due to the fact that errors at high gradients near the start of the capacitor charging can be very inaccurate, up to 50\% for small voltages. Spice combats this by dynamically adjusting its time step so that when gradients are steep the time step is smaller. In order to reduce our error we decided to implement a simple version of this algorithm that has been used for the testing shown here and is described in the Transient Analysis section. This however was not included in the final code as it has not be tested enough to be completely stable. When using this algorithm the error was reduced to an average of 1.5\% whilst only increasing the number of time steps by about 20\%. The plot of this graph can be seen in figure . Capacitors were also tested in similar arrangements connected to ground and each of the different component types as well as in parallel with components to check no bugs were present in special cases. 
+\begin{figure}[h]
+    \caption{Capacitor Test}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/CapacitorTest1.png}
+    \label{fig:CapacitorTest1}
+\end{figure}
+\subsection{Testing Inductor Model}
+When testing inductors in the circuit shown in figure \ref{fig:InductorTest1} we found a slightly higher error than the capacitor with an average of 4.5\% across the analysis with a maximum error of 60\%. When we switched to the dynamic time steps as with the capacitors we saw an error of 1.5\% average and 40\% maximum in measuring the voltage across the inductor. As with the capacitor this relatively high error suggests that a better algorithm for adjusting the time steps is needed to match the outputs from spice. Given the fact that these components are dependent on integrals an error of 1.5\% is not huge and in many circuits better than the error on the values of the components in real world tests. The plot of the voltage across the inductor shown in this test is given in figure .
+\begin{figure}[h]
+    \caption{Inductor Test}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/InductorTest1.png}
+    \label{fig:InductorTest1}
+\end{figure}
+\subsection{Energy Storage Testing}
+To demonstrate the functionality of an LC circuit the circuit shown in figure \ref{fig:LCCircuit1} was used. A frequency of 30Hz was used for the ac source and spice gave the waveform shown in figure \ref{fig:LCSpice1}. As can be seen our waveform in figure \ref{fig:LCOutput1} is the same shape as that shown in the spice output. A measure of our accuracy though showed that the average error was 10\%, ignoring values less that 0.001mV. This is much higher than our other test but the voltages in this test our very low and so this doesn't represent a terrible absolute error. This circuit is also oscillating at a much higher frequency and so more integration error would be expected as this is a more complex waveform. 
+\begin{figure}[h]
+    \caption{LC Circuit}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/LCCircuit1.png}
+    \label{fig:LCCircuit1}
+\end{figure}
+\begin{figure}[h]
+    \caption{Spice LC Output}
+    \centering
+    \includegraphics[width=1\textwidth]{images/LCSpice1.png}
+    \label{fig:LCSpice1}
+\end{figure}
+\begin{figure}[h]
+    \caption{Simulation LC Output}
+    \centering
+    \includegraphics[width=1\textwidth]{images/LCOutput1.png}
+    \label{fig:LCOutput1}
+\end{figure}
 \section{Final Evaluation}
 
 \newpage
