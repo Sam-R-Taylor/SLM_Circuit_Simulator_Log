@@ -33,8 +33,8 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{SLM Soloutions}
-\lhead{SLM Circuit Sim}
+\rhead{SLM Solutions}
+\lhead{Circuit Simulator}
 \rfoot{Page \thepage}
 
 \graphicspath{ {./images/} }
@@ -100,11 +100,12 @@ Key Evaluation points:
 
 \textbf{Non-Functional Requirements}
 \newline
-1. The software must be capable of analyse different kinds of circuits
+\textbf{1. The software must be capable of analyse different kinds of circuits.}
 \newline
-2. The software must be able to perform the analysis in a fast and efficient way
-\newline
-3. The software must be capable of performing the analysis consuming the least amount of power possible
+We have seen from our testing section the range of circuits that can be analysed by our simulator , the components implemented 
+\smallbreak
+\textbf{2. The software must be able to perform the analysis in a time efficient way.}
+
 
 \newpage
 \subsection{Design Process and Project management}
@@ -122,9 +123,10 @@ We also used a timeline to keep general project discipline and keep goals realis
 \begin{figure}[h]
     \caption{Snapshot of Onenote backlog}
     \centering
-    \includegraphics[width=12cm]{images/Backlog.PNG}
+    \includegraphics[width=0.8\textwidth]{images/Backlog.PNG}
     \label{fig:BackLog}
 \end{figure}
+We used Git a distributed version-control system for tracking changes in source code during our software development. Link to repo in references. 
 
 \newpage
 \subsection{Design Process Review}
@@ -183,6 +185,8 @@ It holds a number of key fields:
 \bigbreak
 A circuit object dynamically changes during a simulation. Each macro-block has access to it in order to carry out the simulation or print out the node voltages and the currents through each branch.\\
 The vector$<$Component*$>$ and the vector$<$Nodes$>$ is instantiated before the simulation is run according to the input file. During each timestep all the non-linear components are updated and the voltages at each node evaluated. The vector$<$Node$>$ is then used to evaluate the currents through each branch. The updated circuit object is then used as a starting point to evaluate the node voltages at the next time instance.
+\paragraph{Node Struct}
+The node struct is present in the circuit object as it is necessary to work out currents through voltage sources easily. The struct contains a vector of components, representing the components at that node as well as an index that labels that node. The circuit then has a vector of nodes representing each of the nodes in the circuit. This vector is formed when the circuit is constructed in the parser. 
 
 \bigbreak
 See Source code (Circuit.hpp) for implementation.
@@ -307,7 +311,7 @@ Thus we can interpret this simplified equation into a companion model, that give
 \begin{figure}[h]
     \caption{Inductor Model}
     \centering
-    \includegraphics[width=0.6\textwidth]{images/InductorModel.jpg}
+    \includegraphics[width=0.7\textwidth]{images/InductorModel.jpg}
     \label{fig:InductorModel}
 \end{figure}
 
@@ -845,7 +849,7 @@ In order to demonstrate the ability of the algorithm to solve circuits with Volt
     \label{fig:LinearTest}
 \end{figure}
 
-
+\newpage
 \subsection{Testing Diodes}
 \subsubsection{Test 1}
 The accuracy of circuits containing diodes is dependent on the error that we set with the RELTOL and ABSTOL parameters within our program. The values of RELTOL that we used was $10^{-3}$ as so our relative accuracy should be in the region of $0.1\%$. This accuracy is not possible at values very close to 0V and the ABSTOL parameter sets a limit on the maximum finite accuracy of the simulation. When testing our diodes we continued to aim for an average relative accuracy of $0.5\%$ as a bench mark. We found that in order to achieve this the presence of connection resistances in the diode model were necessary especially when other low resistances are present in the circuit. \\
@@ -1005,7 +1009,7 @@ In order to evaluate our algorithm it was important to measure its complexity. T
     \includegraphics[width=0.5\textwidth]{images/LogSparce.png}
     \label{fig:LogSparse}
 \end{figure}
-The time taken to solve an nth order diode circuit was also measured, in this case n diodes were placed in series with a high enough voltage to put them all in forward bias. The time taken to simulate vs the number of nodes is shown in figure \and the log plot in figure. The log plot has the same gradient as before of 1.3 which suggests that the iterative algorithm doesn't change the order of the complexity. This means that the iterative algorithm has been implemented in a fairly efficient manner.
+The time taken to solve an nth order diode circuit was also measured, in this case n diodes were placed in series with a high enough voltage to put them all in forward bias. The time taken to simulate vs the number of nodes is shown in figure \and the log plot in figure. The log plot has the same gradient as before of 1.3 which suggests that the iterative algorithm doesn't change the order of the complexity. This means that the iterative algorithm has been implemented in an efficient manner.
 
 \begin{figure}[!h]
     \caption{Iterative Time Plot}
@@ -1036,7 +1040,7 @@ The Qt application aim is to provide an intuitive and user-friendly interface to
 The Parser macro-block aim is to translate the input file (compatible with a SPICE netlist) into objects usable by our program.\\
 \subparagraph{Set up the simulation }
 The kind of simulation required is specified in the input file and run by Parser.\\
-We support two different kinds of simultation
+We support two different kinds of simulation
 \begin{itemize}
     \item Transient Analysis \ref{ssec:TransientAnalysis}
     \item DC Bias Point Analysis \ref{ssec:DCanalysis}
@@ -1054,7 +1058,49 @@ Both Diodes \ref{fig:diode} and BJTs \ref{ssec:BJT} were implemented within our 
 \newpage
 
 \subsection{Analysis and Efficiency }
-At the start of our project we set an aim to be able to simulate complex circuits to within 1\% error when compared to spice. Throughout our testing we found this to often be the case with tests of BJTs and diodes often resulting in errors of less than 0.1\% next to spice. Our conductance matrix calculations also provides error well within this margin. The area in which we found greater errors was when measuring circuits with energy storage devices. Due to the nature of these devices higher errors are expected due to the inherent error in numerical integration, but the errors whilst not having a visible effect on our output waveform were higher than expected. In order to improve this in the future we would invest more time into creating a better algorithm for dynamically changing the time step to reduce integration errors as well as trying different integration techniques for different circuits. \\The other area in which we would try and make improvement is the model of our BJT and our diode. We would add a parasitic capacitance to the diode and BJT as well as a Ro value to the BJT. The Ro value in particular would have a big effect in improving the accuracy of our model when compared to the output given by Spice. \\In terms of measuring the efficiency of our design, when using the sparse matrix method we found that the circuit solver has a near linear complexity within the range we tested. This was up to a 2000 node circuit which is well within the range that our simulator is best designed for as our emphasis is not on circuits with BJTs and MOSFETs, thus circuits with higher number of components than this are unlikely to be needed to be simulated.  
+At the start of our project we set an aim to be able to simulate complex circuits to within 1\% error when compared to spice. Throughout our testing we found this to often be the case with tests of BJTs and diodes often resulting in errors of less than 0.1\% next to spice. Our conductance matrix calculations also provides error well within this margin. The area in which we found greater errors was when measuring circuits with energy storage devices. Due to the nature of these devices higher errors are expected due to the inherent error in numerical integration, but the errors whilst not having a visible effect on our output waveform were higher than expected. In order to improve this in the future we would invest more time into creating a better algorithm for dynamically changing the time step to reduce integration errors as well as trying different integration techniques for different circuits. \\The other area in which we would try and make improvement is the model of our BJT and our diode. We would add a parasitic capacitance to the diode and BJT as well as a Ro value to the BJT. The Ro value in particular would have a big effect in improving the accuracy of our model when compared to the output given by Spice. \\In terms of measuring the efficiency of our design, when using the sparse matrix method we found that the circuit solver has a near linear complexity within the range we tested. This was up to a 2000 node circuit which is well within the range that our simulator is best designed for as our emphasis is not on circuits with BJTs and MOSFETs, thus circuits with higher number of components than this are unlikely to be needed to be simulated. In the worst case circuits our complexity would be expected to of course be much worse and if each node was connected to each other node it could easily be exponential. We also found that our iterative algorithm didn't change the complexity of the relationship between order of the circuit and time to simulate suggesting that this algorithm was implemented in an efficient manner. 
+\newpage
+\subsection{SRS Evaluation}
+
+\textbf{Functional Requirements}
+
+\medbreak
+
+\textbf{1. Give Node Voltages of a complete circuit within 1 percent of Spice}
+\newline
+This point was addressed in our testing and evaluation of accuracy and efficiency, the criterion was met in most conditions with intended accuracy. Voltages were outputted in a output\verb|_|voltage.txt
+\smallbreak
+\textbf{2. Evaluate Current flowing through each component within 1 percent of Spice}
+\newline
+This point was addressed in our testing and evaluation of accuracy and efficiency, the criterion was met in most conditions with intended accuracy.Currents were outputted in a output\verb|_|current.txt
+\smallbreak
+\textbf{3. Perform analysis for passive, energy storage devices , diodes and transistors.}
+\newline
+We saw through our implementation of components and the component write up section the components implemented and the models used to produce them.
+\smallbreak
+\textbf{4. Take input from a reduced spice netlist file.}
+\newline
+We saw from our video presentation and GUI write up that a txt containing any netlist file would be parsed and any analysis described was performed. The UI made this function especially easy.
+\smallbreak
+\textbf{5. Output analysis to an output file.}
+We saw from our transient analysis function that two output files are created containing data to a stipulated accuracy.
+
+
+\bigbreak
+
+\textbf{Non-Functional Requirements}
+\medbreak
+\textbf{1. The software must be capable of analyse different kinds of circuits}
+\newline
+We have seen from the numerous tests performed the ability of our simulator to deal with varying circuits. The video also shows a number of complex circuits operating with accuracy on our system. 
+
+\smallbreak
+
+\textbf{2. The software must be able to perform the analysis in a time efficient way}
+\newline
+We have seen from our testing on complexity and through our design choices a clear focus on maintaining code and design efficiency that has lead to time efficient design that scales well with an increasing number of nodes. We have also aimed to use optimal code implementation to ensure an efficient solution. 
+
+
 
 \newpage
 
