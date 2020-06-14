@@ -141,9 +141,9 @@ It was also confusing at time which to prioritise : Accuracy or speed/efficiency
     \includegraphics[width=0.6\linewidth]{images/Timeline.PNG}
     \label{fig:Timeline}
 \end{figure}
+We decided to use this timeline over a Gannt chart as is Incorporated well with our scrum model.
 Reviewing our timeline and working procedures revealed to me some key points to work better on projects in future:
 \begin{itemize}
-    \item Set Clear Milestones and deadlines for collective action.
     \item Find a better method for communicating changes made to each others code.
     \item Set Clear data structures / types to be passed between functions. (Establish a universal format)
     \item Have project discipline and maintain focus on tasks that are expected to be complete.
@@ -158,7 +158,7 @@ The input net list is in the form of a txt file with two output files: output\ve
 \begin{figure}[h]
     \caption{Overview of data flow}
     \centering
-    \includegraphics[width=0.7\textwidth]{images/Overview.PNG}
+    \includegraphics[width=0.65\textwidth]{images/Overview.PNG}
     \label{fig:AlgoOverview}
 \end{figure}
 
@@ -189,7 +189,7 @@ The vector$<$Component*$>$ and the vector$<$Nodes$>$ is instantiated before the 
 The node struct is present in the circuit object as it is necessary to work out currents through voltage sources easily. The struct contains a vector of components, representing the components at that node as well as an index that labels that node. The circuit then has a vector of nodes representing each of the nodes in the circuit. This vector is formed when the circuit is constructed in the parser. 
 
 \bigbreak
-See Source code (Circuit.hpp) for implementation.
+See Source code: Circuit.hpp for implementation.
 
 \newpage
 \subsection{Why Eigen3}
@@ -238,14 +238,14 @@ A Component is a class with a name, an anode, a cathode and some specialized met
 \subsection{Current Components}
 Current components , have virtual function called get\verb|_|current() that allows the any component that is a current component to be cast into a current component and have its get\verb|_|current function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
 \bigbreak
-See Appendix A (Current Components) for implementation.
+See source code: Component.hpp (Current Component) for implementation.
 \medbreak
 
 
 \subsubsection{Resistor}
 The resistor is a simple component to implement with respect to our design hence a simple self produced model was used. The class contained a resistance and conductance variables and a get\verb|_|current method which took the node voltages and resistance of the component. \bigbreak\\$Current = \frac{VAnode - VCathode}{R}$
 \bigbreak
-See source code Component.hpp (Resistor) for implementation.
+See source code: Component.hpp (Resistor) for implementation.
 \newpage
 \subsubsection{Capacitor}
 The capacitor is an energy storage component, hence the transient analysis of such a component requires the use of a companion model to be formed in order to solve the integral needed for a capacitor. Multiple were researched\cite{NumericalMethods} that can represent both the capacitor and inductor: Backward Euler , Forward Euler, Gear and the Trapezoidal Rule\cite{IntegrationMethods}. We chose to implement the Backward Euler method as it is very stable whilst being fairly easy to implement. Many versions of Spice also also it by default. 
@@ -263,7 +263,7 @@ $V_{n+1} = V_n + \frac{\Delta t}{C}i_{n+1}$
 $I_{n+1} = \frac{C}{\Delta t}(V_{n+1}-V_n)$
 \bigbreak
 
-Therefore, we can interpret this simplified equation into a companion model that gives us the circuit in figure \ref{fig:CapModel}. The Backward Euler method represents each change as a straight line and so the capacitor can be represented as a current source in parallel with a conductor. The values used in the circuit result in the calculation of the voltage across the capacitor being the solution to the next iteration of the Backward Euler method: 
+Therefore, we can interpret this simplified equation into a companion model that gives us the circuit in figure \ref{fig:CapModel}. The Backward Euler method represents each change as a straight line and so the capacitor can be represented as a current source in parallel with a resistor. The values used in the circuit result in the calculation of the voltage across the capacitor being the solution to the next iteration of the Backward Euler method: 
 
 \begin{figure}[h]
     \caption{Capacitor Model}
@@ -288,9 +288,9 @@ Therefore, we can interpret this simplified equation into a companion model that
 \bigbreak 
 
 Thus for our transient analysis we now have a linear model for our conductance matrix. Conductance remains constant from the start of the simulation to finish. However the value of Linear Current is updated on every time step, as the value of Vn changes from from step to step.
-
-See source code Component.hpp (Capacitor) for implementation
 \bigbreak 
+See source code: Component.hpp (Capacitor) for implementation
+
 
 \subsubsection{Inductor}
 The inductor is the dual of the capacitor hence similar results apply (Same Backward Euler model). We end up with a similar derivation:
@@ -333,7 +333,7 @@ Thus for our transient analysis we now have a linear model for our conductance m
 
 \bigbreak
 
-See source code Component.hpp (Inductor) for implementation.
+See source code: Component.hpp (Inductor) for implementation.
 
 \newpage
 
@@ -352,27 +352,27 @@ Both components have a range of companion models associated with them.
 Our choice of model was made to ensure accuracy and speed of simulation. Trapezoidal calculation introduces error due to over and under estimation of area, whilst also being computationally intense. Backward Euler was chosen as it is far more accurate than Forward Euler. Our model represents this Euler method which allowed for increased speed and accuracy. Both used Norton equivalent models as conductance was our preferred calculation parameter (instead of resistance) hence, a slight accuracy error may occur in the capacitor model as computers may have trouble dividing by too small a $\Delta t$.
 
 \subsubsection{Current Source}
-A Current Source is implemented by adding constants to the vector of currents. Such constant is returned by the get\_current method.\bigbreak
-See source code Component.hpp (Current Source) for implementation
+A Current Source is implemented by adding constants to the vector of currents. The constant is returned by the get\_current method.\bigbreak
+See source code: Component.hpp (Current Source) for implementation
 \subsubsection{Voltage Controlled Current Source}
 A Voltage Controlled Current Source is characterized by the equation $ Current = gain\cdot(V_{control\_anode}-V_{control\_cathode})$
 \bigbreak
-See source code Component.hpp (Voltage Controlled Current Source) for implementation
+See source code: Component.hpp (Voltage Controlled Current Source) for implementation
 \newpage
 \subsection{Voltage Components}
 Voltage components , have virtual function called get\verb|_|Voltage() that allows the any component that is a voltage component to be cast into a voltage component and have its get\verb|_|Voltage() function called , conveniently allowing differentiation between components of different properties in KCL solver and avoiding needless selection.
 \bigbreak
-See source code Component.hpp (Voltage Component) for implementation
+See source code: Component.hpp (Voltage Component) for implementation
 
 \subsubsection{Voltage Source}
 A voltage source is characterized by the equation $V_{anode}-V_{cathode}=V_{src}$. \bigbreak
-See source code Component.hpp (Voltage Source) for implementation
+See source code: Component.hpp (Voltage Source) for implementation
 
 \subsubsection{Voltage Controlled Voltage Source}
 A Voltage Controlled Voltage Source is characterized by the equation
 $V_{anode}-V_{cathode}=gain\cdot(V_{control\_anode}-(V_{control\_cathode})$.
 \bigbreak
-See source code Component.hpp (Voltage Controlled Voltage Source) for implementation
+See source code: Component.hpp (Voltage Controlled Voltage Source) for implementation
 
 
 \subsubsection{AC Voltage Source}
@@ -435,7 +435,7 @@ These three terms completely describe the diode model with the KCL solver algori
     \label{fig:diode}
 \end{figure}
 \bigbreak
-See source code Component.hpp (Diode) for implementation
+See source code: Component.hpp (Diode) for implementation
 \newpage
 
 \subsubsection{BJT}\label{ssec:BJT}
@@ -488,7 +488,7 @@ Set OP has to be called at the beginning of each iteration within the Transient 
     \includegraphics[width=0.5\textwidth]{images/BJTCollector.png}
     \label{fig:BJTCollector}
 \end{figure}
-After voltages have been calculated in a circuit the BJT is also required to have a method to calculate the current passing through it. Unlike the other components the BJT GetCurrent method return a vector<double> as opposed to a double. The fist value in the vector represents the current going into the collector, the second the base, and the third the emitter. When the coefficients for each node were calculated earlier when calculating voltages they were stored in three vectors. This means that using the voltages the currents can quickly be calculated, this is shown in figure \ref{fig:BJTCurrent}. 
+After voltages have been calculated in a circuit the BJT is also required to have a method to calculate the current passing through it. Unlike the other components the BJT GetCurrent method return a vector double as opposed to a double. The fist value in the vector represents the current going into the collector, the second the base, and the third the emitter. When the coefficients for each node were calculated earlier when calculating voltages they were stored in three vectors. This means that using the voltages the currents can quickly be calculated, this is shown in figure \ref{fig:BJTCurrent}. 
 \begin{figure}[h]
     \caption{BJT Current Generator}
     \centering
@@ -497,7 +497,7 @@ After voltages have been calculated in a circuit the BJT is also required to hav
 \end{figure}
 The BJT used within our simulation was the 2N2222, which has values of $I_S = 10^{-14}$, $R_b = 10$, $R_c = 0.3$, $R_e - 0.2$, $\beta_r = 3$ and $\beta_f = 200$.
 \bigbreak
-See source code Component.hpp (BJT) for implementation
+See source code: Component.hpp (BJT) for implementation
 \newpage
 \section{Analysis Algorithms}\label{sec:AnalysisAlgorithms}
 \subsection{Parser}\label{ssec:Parser}
@@ -529,8 +529,8 @@ Note that our design was made capable of dealing with some additional components
 
 Firstly Parser.hpp constructs an empty Circuit instance, it then peeks the first character of each line of the input file.
 \begin{itemize}
-\item If the first character is a \textit{designator letter}, it constructs a new Component in the heap with the aid of read\_value and read\_node\_number functions, then it updates the Circuit instance by using the Circuit::add\_component function.
-\item If the first string of the line is \textit{.tran} it then proceeds to run a Transient analysis of the Circuit
+\item If the first character is a \textit{designator letter}, it constructs a new Component in the heap with the aid of read\_value and read\_node\_number functions, it then updates the Circuit instance by using the Circuit::add\_component function.
+\item If the first string of the line is \textit{.tran} it then proceeds to run a Transient analysis of the Circuit 
 \item If the first character is a \textit{*} it ignores the line because it is a comment
 \item If the first string of the line is \textit{.end} it closes the input file
 \end{itemize}
@@ -543,18 +543,18 @@ Firstly Parser.hpp constructs an empty Circuit instance, it then peeks the first
 \end{figure}
 
 \bigbreak
-See source code Parser.hpp for implementation
+See source code: Parser.hpp for implementation
 
 \subsection{KCL Solver}\label{KCLsolver}
-The role of KCL\_Solver is to solve for the Circuit voltages at a given instant in time by constructing a conductance matrix. The matrix requires that all components have a linear relationship between current and voltage as it uses linear algebra to solve the circuit. At the start of our project a rapid prototype of the algorithm was made that functioned correctly but wasn't designed to be as efficient as possible. This was necessary as it allowed other sections of the program that needed the algorithm to be worked on without having to wait for a final version. The KCL Solver algorithm needs to be particularly fast as it may be run by the Transient Solver algorithm many times each time step meaning it is the biggest bottle neck to speed.
+The role of KCL\_Solver is to solve for the Circuit voltages at a given instance in time by constructing a conductance matrix. The matrix requires that all components have a linear relationship between current and voltage as it uses linear algebra to solve the circuit. At the start of our project a rapid prototype of the algorithm was made that functioned correctly but wasn't designed to be as efficient as possible. This was necessary as it allowed other sections of the program to operate that needed the algorithm to be worked on without having to wait for a final version. The KCL Solver algorithm needs to be particularly fast as it may be run by the Transient Solver algorithm many times each time step, meaning it is the biggest bottle neck to speed.
 \subsubsection{Rapid Prototype Model}
-This model was deigned to be quick to make and simple to add more components to. However, it has many areas where it is repeating calculation resulting in slower speeds.\\ The algorithm takes a circuit object by reference and modifies the voltages inside of the object. Firstly it iterates through each of the nodes in the vector of nodes within the circuit, each time iterating through each nodes vector of component objects. At each component the algorithm stores the coefficients describing the current coming from that component depending on the voltages at each node, as well as the constant current coming from the component. These values are added to a vector of doubles where each index represents the corresponding node. For instance a resistor with an anode of node 1 and a cathode of node 2 would add its conductance to the second index of the vector and the negative of its conductance to the third of the vector, if we are looking at the cathode. Once all the components have been iterated through this vector is inserted as a row in a matrix corresponding to that nodes index. This forms the conductance matrix which is used to calculate the voltages as described earlier.\\
+This model was designed to be quick and simple to allow us to add more components. However, it has many areas where it is repeating calculations resulting in slower speeds.\\ The algorithm takes a circuit object by reference and modifies the voltages inside of the object. Firstly it iterates through each of the nodes and at each node it iterates through each component objects. At each component the algorithm stores the coefficients describing the current coming from that component depending on the voltages at each node, as well as the constant current coming from the component. These values are added to a vector of doubles where each index represents the corresponding node. For instance a resistor with an anode of node 1 and a cathode of node 2 would add its conductance to the second index of the vector and the negative of its conductance to the third of the vector, if we are looking at the cathode. Once all the components have been iterated through this vector is inserted as a row in a matrix corresponding to that nodes index. This forms the conductance matrix which is used to calculate the voltages as described earlier.\\
 In the case of voltage sources however, this gets a little more complicated. Since the current through the voltage source can't be calculated using the voltage across it an iterative technique was used to find the current coming into the voltage source. The function that creates the vector of coefficients would be called on the opposite node of the voltage source, but this time ignoring the connection to the voltage source. This vector of doubles could then be modified by replacing all instances of the opposite node with the current node minus the voltage of the voltage source. Once complete this vector of doubles can be added to the current vector of doubles for the node and the iteration through the components continues. 
 \bigbreak
-See source code OLDKCLsolver.hpp for implementation
+See source code: OLDKCLsolver.hpp for implementation
 \newpage
 \subsubsection{Final Optimized Model}\label{ssec:optimizedmodel}
-The final version of the KCL solver has been designed to be as fast and efficient as possible. Overall, the newly designed algorithm was found to be on average 25\% faster than the prototype models.
+The final version of the KCL solver has been designed to be as fast and efficient as possible. Overall, the newly designed algorithm was found to be on average 25\% faster than the prototype function.
 
 \begin{figure}[h]
     \caption{KCL algorithm}
@@ -647,7 +647,7 @@ The information of where the coefficients should be written is encoded in the \t
 
 Firstly, we iterate through the Circuit::vector$<$Component*$>$ to know how the equations need to be set up. We have made the design choice of using \textit{pointers} as opposed to object instances for the following reasons
 \begin{itemize}
-  \item They allow maximum exploitation of the hierarchical design. Component* can be downcasted to derived Components (e.g. Resistor*,Inductor*...) thus allowing us to use derived classes' methods.
+  \item They allow maximum exploitation of the hierarchical design. Component* can be downcast to a derived Components (e.g. Resistor*,Inductor*...) thus allowing us to use derived classes' methods.
   \item They allow Components to be instantiated in the Heap, thus enabling us to have a single instance of a given Component that each macro-block in our design can refer to. For instance components are constructed by Parser (see \ref{ssec:parser}) and then processed by KCL solver
   \item They avoid copy-constructing objects producing therefore a significant speed increase of our program
 \end{itemize}
@@ -671,8 +671,8 @@ The Eigen library provides us with two different categories :
 Testing revealed that the sparse matrix was faster than using dense matrix for circuits of any order and so the sparse matrix implementation was used in the final program. Eigen has several different algorithms for solving a sparse matrix and the one we chose was SparesLU. We did not find this to be the fastest algorithm but it did give the most stable results in terms of accuracy, with other algorithms often not converging when used for diodes due to high inaccuracies. \\
 Dense matrix also has different solving algorithm and we found that using the matrix.inverse() method yielded the fastest and most accurate results in our testing. 
 \bigbreak
-for Dense implementation see source code KCLsolver.hpp\\
-for Sparse implementation see source code sparseKCLsolver.hpp
+See source code: KCLsolver.hpp for Dense implementation \\
+See source code: sparseKCLsolver.hpp for Sparse implementation
 \newpage
 
 \subsection{Transient Solver}\label{ssec:TransientSolver}
@@ -683,7 +683,7 @@ Originally we considered that due to the presence of many node voltages in a cir
 \bigbreak $I_d - I_{in} = 0$\bigbreak
 Where $I_in$ is the current entering the diode and $I_d$ is the current due to the diode current equation. Combining this with Newton-Raphson gives:
 \bigbreak $x_{n+1} = x_n - \frac{I_d - I_{in}}{\frac{d I_d}{d V_d}}$\bigbreak
-The Newton Raphson method the function each iteration as a linear function and so a diode is going to need to be modeled as a resistor and current source in parallel as any linear voltage current relationship can be modelled as this, (apart from those with an infinite gradient). I we consider a diode as a current source in parallel with a resistor we can again do KCL at its anode to form the equation. 
+The Newton Raphson method the function each iteration as a linear function and so a diode is going to need to be modeled as a resistor and current source in parallel as any linear voltage current relationship can be modelled as this, (apart from those with an infinite gradient). If we consider a diode as a current source in parallel with a resistor we can again do KCL at its anode to form the equation. 
 \bigbreak $V_d*G_l + I_l - I_{in} = 0$ Where $G_l$ and $I_l$ are the conductor and current source values.\bigbreak
 We want to find a value of $G_l$ and $I_l$ such that if we solve the circuit using the KCL solver algorithm the voltage across the diode will be $V_{n+1}$
 \bigbreak
@@ -699,7 +699,7 @@ Within Spice two parameters are used to measure this convergence.
 Spice combines these two parameters within the inequality $|v_{n+1}-x_n| < RELTOL*|x_n| + ABSTOL$.\\
 RELTOL measures the relative change in the voltage and ABSTOL is present as near 0V $RELTOL*|x_n|$ may become too small. Each iteration of our algorithm each of the node voltages is compared using this inequality to the previous voltage and if all the inequalities return true the algorithm finishes. A maximum number of iterations is set so that the program can't get stuck in an infinite loop. Within our program the max iterations was set to 1000 as we found that a correct circuit usually has a max iterations of a few hundred on the first time step and so this provides room for that occur. We set RELTOL and ABSTOL to values of $10^{-3}$ and $10^{-12}$ respectively. This provided a trade off between accuracy and speed of our program. If higher accuracy is needed RELTOL should be decreased. 
 \bigbreak
-In order to implement this algorithm the flow diagram shown in figure \ref{fig:transient}. The entire algorithm is contained within one function called TransientSolver. This function takes a circuit object by reference and modifies its voltages to the correct voltages given components in the circuit or exits the program if the maximum iterations is reached. This means that the starting guess for the voltage is the voltages from the previous time instance meaning that they are very close to the new voltages. This results in very few iterations normally being needed. Only the first iteration with starting guesses of 0V takes many iterations under normal use. \\
+In order to implement this algorithm the flow diagram shown in figure \ref{fig:transient} is used. The entire algorithm is contained within one function called TransientSolver. This function takes a circuit object by reference and modifies its voltages to the correct voltages given components in the circuit or exits the program if the maximum iterations is reached. This means that the starting guess for the voltage is the voltages from the previous time instance meaning that they are very close to the new voltages. This results in very few iterations normally being needed. Only the first iteration with starting guesses of 0V takes many iterations under normal use. \\
 
 The algorithm runs within a while loop, starting by looping through all the components and setting the linear current and conductance of all diodes and BJT's. As BJT's are simply modelled as containing two diodes they converge in the same manner as diodes do. The algorithm then saves the circuit voltages in a vector before running the KCL solver algorithm on the circuit. After this it compares the old voltages with new and breaks the while loop if complete.  
 
@@ -710,14 +710,14 @@ The algorithm runs within a while loop, starting by looping through all the comp
     \label{fig:transient}
 \end{figure}
 \bigbreak
-For implementation see source code TransientSolver.hpp
+See source code: TransientSolver.hpp for implementation 
 \newpage
 
 \subsection{DC Operating Point Analysis}\label{ssec:DCanalysis}
 The DC operating point analysis is required to find the starting node voltages for the transient analysis. It is very similar to the transient analysis and uses most of the same code base. The difference is that it only looks at a single point in time as well as assuming all capacitors to be open circuits, inductors to short circuits and ac sources to be at their dc bias point. In order to implement this the linear conductance and current of the capacitors are all left at their default value of 0, essentially making them open circuits. The same is used for the ac sources with their default values being their dc bias.\\Unfortunatly inductors are a little more complicated to implement as short circuits. In order to do this the same method as used in the final KCL solver for treating voltage sources was used as a short circuit can be thought of as a 0V voltage source. To allow for this a boolean parameter was added to the KCL solver function with a default values of false. When this is set to true all inductors are treated in this way, forming super nodes.\\
 With this code added to the KCL Solver the OP analysis function simply has to check if the circuit is linear or not and run the KCL solver or the transient solver algorithm respectively. 
 \bigbreak
-for implementation see source code OPAnalysis.hpp
+See source code: OPAnalysis.hpp for implementation 
 \newpage
 
 \subsection{Calculate Currents}
@@ -731,8 +731,9 @@ When running a transient or dc analysis one of the outputs of the simulation is 
     \label{fig:CalculateCurrent}%
 \end{figure}
 
-To calculate current within a circuit first the voltages must be found and then the calculate currents method can be called, passing the circuit object by reference. An optional boolean parameter with a default value of false is also present that tells the algorithm how to treat inductors. The flow diagram for the Calculate Current method is shown in figure \ref{fig:CalculateCurrent}. The calculate voltage component current method flow diagram is shown in figure \ref{fig:CalculateVoltageCurrent}, during OP analysis the same method is used for inductors. The node parameter is present in the algorithm to ensure that if two voltage sources have their anodes connected the algorithm wont get stuck in a loop. 
-
+To calculate current within a circuit first the voltages must be found and then the calculate currents method can be called, passing the circuit object by reference. An optional boolean parameter with a default value of false is also present that tells the algorithm how to treat inductors. The flow diagram for the Calculate Current method is shown in figure \ref{fig:CalculateCurrent}. The calculate voltage component current method flow diagram is shown in figure \ref{fig:CalculateCurrent}, during OP analysis the same method is used for inductors. The node parameter is present in the algorithm to ensure that if two voltage sources have their anodes connected the algorithm wont get stuck in a loop. 
+\bigbreak
+See source code: AnalysisOutput.hpp for implementation
 
 \newpage
 
@@ -753,10 +754,10 @@ The function follows this design:
 \end{figure}
 Linear and non linear components follow different paths as they use different methods of calculation. I.e non-linear components converge
 \smallbreak
-The set conductance function simply loops though each component in the Circuit and sets their conductance based on the parameter of delta time see inductor and capacitor models for further detail.\\
+The set conductance function simply loops though each component in the Circuit and sets their conductance if they are a energy storage device based on the parameter of delta time, see inductor and capacitor models for further detail.\\
 The update node voltages function goes through and updates the value of variable voltage sources such as the AC Voltage source at the current time. It then runs the Transient solver if diodes or bjts are present and the KCL solver if not. 
 After this the circuit vector of nodes has been updated to the new values for that time instance\\
-The calculate current function is then called which stores calls the get\verb|_|current() on a component or calculates current in each component saving this value to then be outputted to file.   \\
+The calculate current function is then called which calculates the current through each component and then stores that current in the current parameter of voltage components, current components or BJTs.   \\
 The new node voltages and currents are all then outputted to their respective files by the nodevoltagetofile()  function which inputs the values in CSV format to two txt files.\\
 Finally the transient analysis assesses whether the simulation has reach its specified end time, continuing the process with the next time value or ending simulation depending on this evaluation.\\ 
 Our original code used a constant time step through out the simulation. Spice however, uses a dynamic time step, decreasing it when the voltage time gradient is high, resulting in more accurate results for energy storage components. In testing a simple version of this algorithm was implemented to see the accuracy possible with such an algorithm. The time step was adjusted using the following formula which was generated through trial and error. \bigbreak
@@ -775,7 +776,7 @@ Where the max\_timestep is the timestep inputted by the user and grad is the big
 
 
 \bigbreak
-See source code TransientAnalysis.hpp for implementation
+See source code: TransientAnalysis.hpp and AnalysisOutput.hpp for implementation
 
 
 \newpage
@@ -803,7 +804,7 @@ In order to test our KCL solver algorithm many different test cases had to be us
 \subsection{Voltage controlled sources}
 To ensure functionality of the extra Voltage Controlled components within our implementation two simple tests were run.
 \subsubsection{Voltage Controlled Voltage Source}
-  In order to demonstrate the ability of the algorithm to solve circuits with Voltage Controlled Voltage Source the circuit shown in figure 23 was used.
+  In order to demonstrate the ability of the algorithm to solve circuits with Voltage Controlled Voltage Source the circuit shown in figure \ref{fig:VCCStest} was used.
 \begin{center}
 \begin{tabular}{ |c|c|c|c|c|c|}
 \hline
@@ -822,11 +823,11 @@ To ensure functionality of the extra Voltage Controlled components within our im
     \caption{VCVS test}
     \centering
     \includegraphics[width=0.5\textwidth]{images/VCVS_test.PNG}
-    \label{fig:LinearTest}
+    \label{fig:VCCStest}
 \end{figure}
 
 \subsubsection{Voltage Controlled Current Source}
-In order to demonstrate the ability of the algorithm to solve circuits with Voltage Controlled Current Source the circuit shown in figure 24 was used.
+In order to demonstrate the ability of the algorithm to solve circuits with Voltage Controlled Current Source the circuit shown in figure \ref{fig:VCCStest} was used.
 
 \begin{center}
 \begin{tabular}{ |c|c|c|c|c|c|}
@@ -846,7 +847,7 @@ In order to demonstrate the ability of the algorithm to solve circuits with Volt
     \caption{VCCS test}
     \centering
     \includegraphics[width=0.5\textwidth]{images/VCCS_test.PNG}
-    \label{fig:LinearTest}
+    \label{fig:VCCStest}
 \end{figure}
 
 \newpage
@@ -880,6 +881,7 @@ The current was also tested and the relative errors are shown compared to spice 
     \includegraphics[width=0.5\textwidth]{images/DiodeTest1.png}
     \label{fig:DiodeTest1}
 \end{figure}
+\newpage
 \subsubsection{Test 2}
 We also tested our diode in full wave rectifier arrangement to demonstrate its accuracy in more complex circuits. The circuit used is the one shown in figure \ref{fig:DiodeTest2}. Testing was more complicated as we needed to compare with the spice output at different time steps. As spice doesn't use constant time steps unlike our algorithm we cannot simply compare the voltage at each time step. In order to measure the accuracy we created a python script that interpolates the data from spice to give a voltage at each time step. In order to do this we assumed each of the voltage changes in the spice output to be linear. This can then be compared to our output and taking the average error across all the time steps. As our value of ABSTOL was $10^{-12}$ any value of voltage lower than this didn't have its error compared. We found that the average error for the voltage across the resistor across all time steps was 0.043\% and the maximum error was 1.2\%. The graphical output of our rectifier can be seen in figure \ref{fig:FullWaveRec} and is as expected from a full wave rectifier. Our analysis was run over 5 seconds with 0.01 second time steps. 
 \begin{figure}[h]
@@ -891,13 +893,13 @@ We also tested our diode in full wave rectifier arrangement to demonstrate its a
 \begin{figure}[h]
     \caption{Full Waver Rectifier Output}
     \centering
-    \includegraphics[width=0.5\textwidth]{images/FullWaveRec.png}
+    \includegraphics[width=0.4\textwidth]{images/FullWaveRec.png}
     \label{fig:FullWaveRec}
 \end{figure}
 \newpage
 \subsection{Testing BJT}
 \subsubsection{Test 1}
-To test the BJT working the circuit shown in figure \ref{fig:BJTTest1} was used. The table below shows the voltage from the spice simulation and our simulation as well as the relative error. The error is greater than that found in the diode bu still within an acceptable margin. Are model unlike spice negates the use of a Ro resistor between the collector and emitter junction. When testing it was found that if a 50K resistor is added between these junctions the voltage output is closer to that predicted by spice. 
+To test the BJT was working we used the circuit shown in figure \ref{fig:BJTTest1} was used. The table below shows the voltage from the spice simulation and our simulation as well as the relative error. The error is greater than that found in the diode but still within an acceptable margin. Are model unlike spice negates the use of a Ro resistor between the collector and emitter junction. When testing it was found that if a 50K resistor is added between these junctions the voltage output is closer to that predicted by spice. 
 \begin{center}
 \begin{tabular}{ ||c| c ||c ||}
 \hline
@@ -943,21 +945,25 @@ We also tested the BJT in a transient analysis with a CE amplifier circuit shown
 \end{figure}
 \newpage
 \subsection{Testing Capacitor Model}
-When testing energy storage devices it was expected that there would be more error than found when testing other components due to the effects of integration error. We tested a capacitor connected to an ac source as shown in figure \ref{fig:CapacitorTest1}. This test resulted in an average error measured against the spice interpolated data of 3\%. This seemed fairly high and was likely due to the fact that errors at high gradients near the start of the capacitor charging can be very inaccurate, up to 50\% for small voltages. Spice combats this by dynamically adjusting its time step so that when gradients are steep the time step is smaller. In order to reduce our error we decided to implement a simple version of this algorithm that has been used for the testing shown here and is described in the Transient Analysis section. This however was not included in the final code as it has not be tested enough to be completely stable. When using this algorithm the error was reduced to an average of 1.5\% whilst only increasing the number of time steps by about 20\%. The plot of this graph can be seen in figure . Capacitors were also tested in similar arrangements connected to ground and each of the different component types as well as in parallel with components to check no bugs were present in special cases. As the current in the capacitor is calculated directly from the voltage across it we found that the errors for current were the same as for voltage which was true for all our energy storage tests. 
-\begin{figure}[h]
-    \caption{Capacitor Test}
+When testing energy storage devices it was expected that there would be more error than found when testing other components due to the effects of integration error. We tested a capacitor connected to an ac source as shown in figure \ref{fig:CapTest}. This test resulted in an average error measured against the spice interpolated data of 3\%. This seemed fairly high and was likely due to the fact that errors at high gradients near the start of the capacitor charging can be very inaccurate, up to 50\% for small voltages. Spice combats this by dynamically adjusting its time step so that when gradients are steep the time step is smaller. In order to reduce our error we decided to implement a simple version of this algorithm that has been used for the testing shown here and is described in the Transient Analysis section. This however was not included in the final code as it has not be tested enough to be completely stable. When using this algorithm the error was reduced to an average of 1.5\% whilst only increasing the number of time steps by about 20\%. Capacitors were also tested in similar arrangements connected to ground and each of the different component types as well as in parallel with components to check no bugs were present in special cases. As the current in the capacitor is calculated directly from the voltage across it we found that the errors for current were the same as for voltage which was true for all our energy storage tests.
+\begin{figure}[h]%
     \centering
-    \includegraphics[width=0.5\textwidth]{images/CapacitorTest1.png}
-    \label{fig:CapacitorTest1}
+    \subfloat[Capacitor Circuit]{{\includegraphics[width=5.5cm]{images/CapacitorTest1.png} }}%
+    \qquad
+    \subfloat[Capacitor Waveform]{{\includegraphics[width=5.5cm]{images/CapWaveform.png} }}%
+    \caption{Capacitor Test}%
+    \label{fig:CapTest}%
 \end{figure}
 \newpage
 \subsection{Testing Inductor Model}
-When testing inductors in the circuit shown in figure \ref{fig:InductorTest1} we found a slightly higher error than the capacitor with an average of 4.5\% across the analysis with a maximum error of 60\%. When we switched to the dynamic time steps as with the capacitors we saw an error of 1.5\% average and 40\% maximum in measuring the voltage across the inductor. As with the capacitor this relatively high error suggests that a better algorithm for adjusting the time steps is needed to match the outputs from spice. Given the fact that these components are dependent on integrals an error of 1.5\% is not huge and in many circuits better than the error on the values of the components in real world tests. The plot of the voltage across the inductor shown in this test is given in figure .
-\begin{figure}[h]
-    \caption{Inductor Test}
+When testing inductors in the circuit shown in figure \ref{fig:InducTest} we found a slightly higher error than the capacitor with an average of 4.5\% across the analysis with a maximum error of 60\%. When we switched to the dynamic time steps as with the capacitors we saw an error of 1.5\% average and 40\% maximum in measuring the voltage across the inductor. As with the capacitor this relatively high error suggests that a better algorithm for adjusting the time steps is needed to match the outputs from spice. Given the fact that these components are dependent on integrals an error of 1.5\% is not huge and in many circuits better than the error on the values of the components in real world tests.
+\begin{figure}[h]%
     \centering
-    \includegraphics[width=0.5\textwidth]{images/InductorTest1.png}
-    \label{fig:InductorTest1}
+    \subfloat[Inductor Circuit]{{\includegraphics[width=5.5cm]{images/InductorTest1.png} }}%
+    \qquad
+    \subfloat[Inductor Waveform]{{\includegraphics[width=5.5cm]{images/InducWaveform.png} }}%
+    \caption{Inductor Test}%
+    \label{fig:InducTest}%
 \end{figure}
 \newpage
 \subsection{Energy Storage Testing}
@@ -983,50 +989,34 @@ To demonstrate the functionality of an LC circuit the circuit shown in figure \r
 \smallbreak
 \newpage
 \subsection{Testing Simulator Algorithm Complexity}
-\paragraph{}
-In order to evaluate our algorithm it was important to measure its complexity. This is very hard to do analytically due to the size of our algorithm and so this was done by plotting the time it took to solve circuits of different sizes. The effect of running more time steps in a transient analysis is essentially linear as this just means running the analysis more times and so only OP analysis was used to measure the complexity. Firstly circuits with only linear components were used and so to test this a program was written that would generate a potential divider of n nodes and test how long it took to solve the circuit 100 times. The solution was calculated 100 times to try and average out variation in run time whilst keeping the total run time for many node circuits reasonable. The output of the circuit was not printed to files as this would effect the time and is not what we are trying to measure. The time for the circuit to be passed was also not measured as this is not a part of the algorithm actually used to solve the circuit. Firstly we measure the time taken to solve using the old dense matrix method. This resulted in the graph in figure \ref{fig:TimeDense}, all times in the testing are measured in ms. In order to evaluate the complexity of our graphs the log of time and nods was also plotted, in this case in figure \ref{fig:LogDense}. The log plot in this case is clearly not completely linear suggesting the complexity may not be completely polynomial. However, in this range the log graph can be approximated as linear and has an average gradient of 2.3. This suggest a complexity between cubic and quadratic. The same measurement was taken using the sparse matrix method shown in figure \ref{fig:TimeSparce} with the log plot in figure \ref{fig:LogSparce}. This resulted in a much faster simulation with the log plot now having a gradient of 1.3, suggesting a complexity of roughly linear within this region. This is far better than the dense matrix time and so is the reason why sparse matrices were used in the final project. \\
-\begin{figure}[!h]
-    \caption{Dense Time Plot}
+In order to evaluate our algorithm it was important to measure its complexity. This is very hard to do analytically due to the size of our algorithm and so this was done by plotting the time it took to solve circuits of different sizes. The effect of running more time steps in a transient analysis is essentially linear as this just means running the analysis more times and so only OP analysis was used to measure the complexity.\\ Firstly circuits with only linear components were used and so to test this a program was written that would generate a potential divider of n nodes and test how long it took to solve the circuit 100 times. The solution was calculated 100 times to try and average out variation in run time whilst keeping the total run time for many node circuits reasonable. The output of the circuit was not printed to files as this would effect the time and is not what we are trying to measure. The time for the circuit to be passed was also not measured as this is not a part of the algorithm actually used to solve the circuit.\\ Firstly we measure the time taken to solve using the old dense matrix method. This resulted in the graph in figure \ref{fig:DenseTest}, all times in the testing are measured in ms. In order to evaluate the complexity of our graphs the log of time and nods was also plotted, in this case in figure \ref{fig:DenseTest}. The log plot in this case is clearly not completely linear suggesting the complexity may not be completely polynomial. However, in this range the log graph can be approximated as linear and has an average gradient of 2.3. This suggest a complexity between cubic and quadratic.\\ The same measurement was taken using the sparse matrix method shown in figure \ref{fig:SparseTest}. This resulted in a much faster simulation with the log plot now having a gradient of 1.3, suggesting a complexity of roughly linear within this region. This is far better than the dense matrix time and so is the reason why sparse matrices were used in the final project. \\
+\begin{figure}[h]%
     \centering
-    \includegraphics[width=0.5\textwidth]{images/TimeDense.png}
-    \label{fig:TimeDense}
+    \subfloat[Time Plot]{{\includegraphics[width=5.5cm]{images/TimeDense.png} }}%
+    \qquad
+    \subfloat[Log Plot]{{\includegraphics[width=5.5cm]{images/LogDense.png} }}%
+    \caption{Dense Matrix Test}%
+    \label{fig:DenseTest}%
 \end{figure}
-\begin{figure}[!h]
-    \caption{Dense Log Plot}
+\begin{figure}[h]%
     \centering
-    \includegraphics[width=0.5\textwidth]{images/LogDense.png}
-    \label{fig:LogDense}
+    \subfloat[Sparse Time Plot]{{\includegraphics[width=5.5cm]{images/TimeSparce.png} }}%
+    \qquad
+    \subfloat[Sparse Log Plot]{{\includegraphics[width=5.5cm]{images/LogSparce.png} }}%
+    \caption{Sparse Matrix Test}%
+    \label{fig:SparseTest}%
 \end{figure}
-\begin{figure}[!h]
-    \caption{Sparse Time Plot}
+The time taken to solve an nth order diode circuit was also measured, in this case n diodes were placed in series with a high enough voltage to put them all in forward bias. The time taken to simulate vs the number of nodes is shown in figure \ref{fig:IterativeTest}. The log plot has the same gradient as before of 1.3 which suggests that the iterative algorithm doesn't change the order of the complexity. This means that the iterative algorithm has been implemented in an efficient manner.
+\begin{figure}[h]%
     \centering
-    \includegraphics[width=0.5\textwidth]{images/TimeSparce.png}
-    \label{fig:TimeSparce}
+    \subfloat[Iterative Time Plot]{{\includegraphics[width=5.5cm]{images/TimeIterative.png} }}%
+    \qquad
+    \subfloat[Iterative Log Plot]{{\includegraphics[width=5.5cm]{images/LogIterative.png} }}%
+    \caption{Iterative Test}%
+    \label{fig:IterativeTest}%
 \end{figure}
-\begin{figure}[!h]
-    \caption{Sparse Log Plot}
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/LogSparce.png}
-    \label{fig:LogSparse}
-\end{figure}
-The time taken to solve an nth order diode circuit was also measured, in this case n diodes were placed in series with a high enough voltage to put them all in forward bias. The time taken to simulate vs the number of nodes is shown in figure \and the log plot in figure. The log plot has the same gradient as before of 1.3 which suggests that the iterative algorithm doesn't change the order of the complexity. This means that the iterative algorithm has been implemented in an efficient manner.
-
-\begin{figure}[!h]
-    \caption{Iterative Time Plot}
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/TimeIterative.png}
-    \label{fig:TimeIterative}
-\end{figure}
-\bigbreak
-\begin{figure}[!h]
-    \caption{Iterative Log Plot}
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/LogIterative.png}
-    \label{fig:LogIterative}
-\end{figure}
-\bigbreak
-Thus concluding complexity testing
-
+\subsubsection{Energy Usage}
+Trying to measure the energy consumption of our program is fairly difficult, especially as this is very dependent on device and conditions. The energy usage of the program should be dependent on the time taken to run it, so an in depth analysis on this has not been done as time for an nth order circuit has already been measured. We did measure the CPU usage of running a simple potential divider with two resistors on a loop though. When running OP analysis on this circuit continuously we found that the CPU usage increased by 11 percent. The CPU being used is a Ryzen 5 2500U which has a maximum wattage of 25 watts. This means that an estimate for the energy consumption could be 2.5 watts, but this measurement is very crude. 
 \newpage
 \section{Final Evaluation}
 \subsection{Technical Problems}
@@ -1052,7 +1042,7 @@ The optimized KCL solver algorithm \ref{ssec:optimizedmodel} deals with setting 
 \subparagraph{Write the output}
 The transient Analysis and DC Bias Point analysis simulations write the output both of voltages and currents in a suitable format in two separate files. Then the Qt application deals with the display of the data using an interactive graph.
 \subparagraph{ Add support for non-linear components (advanced)}
-Both Diodes \ref{fig:diode} and BJTs \ref{ssec:BJT} were implemented within our design.We used the iterative Newton–Raphson method to find solutions for such components\bigbreak
+Both Diodes \ref{ssec:Diode} and BJTs \ref{ssec:BJT} were implemented within our design. We used the iterative Newton–Raphson method to find solutions for such components.\bigbreak
 
 
 \newpage
@@ -1060,7 +1050,7 @@ Both Diodes \ref{fig:diode} and BJTs \ref{ssec:BJT} were implemented within our 
 \subsection{Analysis and Efficiency }
 At the start of our project we set an aim to be able to simulate complex circuits to within 1\% error when compared to spice. Throughout our testing we found this to often be the case with tests of BJTs and diodes often resulting in errors of less than 0.1\% next to spice. Our conductance matrix calculations also provides error well within this margin. The area in which we found greater errors was when measuring circuits with energy storage devices. Due to the nature of these devices higher errors are expected due to the inherent error in numerical integration, but the errors whilst not having a visible effect on our output waveform were higher than expected. In order to improve this in the future we would invest more time into creating a better algorithm for dynamically changing the time step to reduce integration errors as well as trying different integration techniques for different circuits. \\The other area in which we would try and make improvement is the model of our BJT and our diode. We would add a parasitic capacitance to the diode and BJT as well as a Ro value to the BJT. The Ro value in particular would have a big effect in improving the accuracy of our model when compared to the output given by Spice. \\In terms of measuring the efficiency of our design, when using the sparse matrix method we found that the circuit solver has a near linear complexity within the range we tested. This was up to a 2000 node circuit which is well within the range that our simulator is best designed for as our emphasis is not on circuits with BJTs and MOSFETs, thus circuits with higher number of components than this are unlikely to be needed to be simulated. In the worst case circuits our complexity would be expected to of course be much worse and if each node was connected to each other node it could easily be exponential. We also found that our iterative algorithm didn't change the complexity of the relationship between order of the circuit and time to simulate suggesting that this algorithm was implemented in an efficient manner. 
 \newpage
-\subsection{SRS Evaluation}
+\subsection{Software Requirement Specification Evaluation}
 
 \textbf{Functional Requirements}
 
@@ -1083,6 +1073,7 @@ We saw through our implementation of components and the component write up secti
 We saw from our video presentation and GUI write up that a txt containing any netlist file would be parsed and any analysis described was performed. The UI made this function especially easy.
 \smallbreak
 \textbf{5. Output analysis to an output file.}
+\newline
 We saw from our transient analysis function that two output files are created containing data to a stipulated accuracy.
 
 
@@ -1099,6 +1090,9 @@ We have seen from the numerous tests performed the ability of our simulator to d
 \textbf{2. The software must be able to perform the analysis in a time efficient way}
 \newline
 We have seen from our testing on complexity and through our design choices a clear focus on maintaining code and design efficiency that has lead to time efficient design that scales well with an increasing number of nodes. We have also aimed to use optimal code implementation to ensure an efficient solution. 
+
+\bigbreak
+The link to our GitHub repository can be found in the bibliography \cite{GitHub}.
 
 
 
